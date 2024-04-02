@@ -1,0 +1,4 @@
+dump*.imgfs
+
+# Ignores images output by reads
+*.jpg 
