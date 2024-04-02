@@ -58,7 +58,7 @@ struct imgfs_header {
     uint32_t version;   // The version of the database
     uint32_t nb_files;  // The current number of images in the system
     const uint32_t max_files;   // The maximum number of images the system can contain
-    const uint16_t resized_res[NB_RES - 1]; // The resolutions of the "thumbnail" and "small" images (width then height for both)
+    const uint16_t resized_res[2 * (NB_RES - 1)]; // The resolutions of the "thumbnail" and "small" images (width then height for both)
     uint32_t unused_32; // unused
     uint64_t unused_64; // unused
 };

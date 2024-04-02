@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+const int commands_size = sizeof(commands) / sizeof(commands[0]);
 
 /*******************************************************************************
  * MAIN
@@ -25,12 +26,22 @@ int main(int argc, char* argv[])
     if (argc < 2) {
         ret = ERR_NOT_ENOUGH_ARGUMENTS;
     } else {
-        /* **********************************************************************
-         * TODO WEEK 07: THIS PART SHALL BE EXTENDED.
-         * **********************************************************************
-         */
+        argc--; argv++; // Skip the program's name
 
-        argc--; argv++; // skips command call name
+        int commandFound = 0; // Flag
+        for (int i = 0; i < commands_size; ++i) {
+            if (strcmp(argv[0], commands[i].name) == 0) {
+                // Execute the function corresponding to the command
+                commandFound = 1; // Command is found
+                ret = commands[i].func(argc, argv);
+                break; // Exit the loop once the command is executed since each command is unique
+            }
+        }
+
+        // If no command was matched, we were given an invalid command name
+        if (!commandFound) {
+            ret = ERR_INVALID_COMMAND; // Assuming ERR_INVALID_COMMAND is a defined error for unrecognized commands
+        }
     }
 
     if (ret) {
@@ -40,3 +51,4 @@ int main(int argc, char* argv[])
 
     return ret;
 }
+
