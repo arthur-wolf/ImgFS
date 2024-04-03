@@ -85,7 +85,7 @@ struct img_metadata {
 /**
  * @brief An image itself. Each image is stored in a contiguous part of the file, one after the other
  */
-struct imgs_file {
+struct imgfs_file {
     FILE* file; // Indicates the FILE* containing everything (on the disk)
     struct imgfs_header header; // The header of the image database
     struct img_metadata metadata;   // The metadata of the images in the database

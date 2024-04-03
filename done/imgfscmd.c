@@ -28,7 +28,7 @@ int main(int argc, char* argv[])
     } else {
         argc--; argv++; // Skip the program's name
 
-        int commandFound = 0; // Flag
+        int commandFound = 0;
         for (int i = 0; i < commands_size; ++i) {
             if (strcmp(argv[0], commands[i].name) == 0) {
                 // Execute the function corresponding to the command
@@ -40,11 +40,11 @@ int main(int argc, char* argv[])
 
         // If no command was matched, we were given an invalid command name
         if (!commandFound) {
-            ret = ERR_INVALID_COMMAND; // Assuming ERR_INVALID_COMMAND is a defined error for unrecognized commands
+            ret = ERR_INVALID_COMMAND;
         }
     }
 
-    if (ret) {
+    if (ret) { // if (ret != 0)
         fprintf(stderr, "ERROR: %s\n", ERR_MSG(ret));
         help(argc, argv);
     }
