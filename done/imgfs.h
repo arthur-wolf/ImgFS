@@ -88,7 +88,7 @@ struct img_metadata {
 struct imgfs_file {
     FILE* file; // Indicates the FILE* containing everything (on the disk)
     struct imgfs_header header; // The header of the image database
-    struct img_metadata metadata;   // The metadata of the images in the database
+    struct img_metadata* metadata;   // The metadata of the images in the database (dynamic array)
 };
 
 /**

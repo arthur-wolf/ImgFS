@@ -14,7 +14,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-const int commands_size = sizeof(commands) / sizeof(commands[0]);
+const int commands_size = sizeof(commands) / sizeof(commands[0]); // for iterating over commands
 
 /*******************************************************************************
  * MAIN
@@ -23,7 +23,7 @@ int main(int argc, char* argv[])
 {
     int ret = 0;
 
-    if (argc < 2) {
+    if (argc < 2) { // We need at least 2 arguments : the program's name and the command's name
         ret = ERR_NOT_ENOUGH_ARGUMENTS;
     } else {
         argc--; argv++; // Skip the program's name
@@ -32,7 +32,7 @@ int main(int argc, char* argv[])
         for (int i = 0; i < commands_size; ++i) {
             if (strcmp(argv[0], commands[i].name) == 0) {
                 // Execute the function corresponding to the command
-                commandFound = 1; // Command is found
+                commandFound = 1;
                 ret = commands[i].func(argc, argv);
                 break; // Exit the loop once the command is executed since each command is unique
             }
