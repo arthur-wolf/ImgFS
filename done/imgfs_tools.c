@@ -41,9 +41,9 @@ void print_header(const struct imgfs_header* header)
 \nVERSION: %" PRIu32 "\n\
 IMAGE COUNT: %" PRIu32 "\t\tMAX IMAGES: %" PRIu32 "\n\
 THUMBNAIL: %" PRIu16 " x %" PRIu16 "\tSMALL: %" PRIu16 " x %" PRIu16 "\n",
-           header->name, header->version, header->nb_files, header->max_files, header->resized_res[THUMB_RES * 2],
-           header->resized_res[THUMB_RES * 2 + 1], header->resized_res[SMALL_RES * 2],
-           header->resized_res[SMALL_RES * 2 + 1]);
+            header->name, header->version, header->nb_files, header->max_files, header->resized_res[THUMB_RES * 2],
+            header->resized_res[THUMB_RES * 2 + 1], header->resized_res[SMALL_RES * 2],
+            header->resized_res[SMALL_RES * 2 + 1]);
     printf("*********** IMGFS HEADER END ************\n\
 *****************************************\n");
 }
@@ -61,9 +61,72 @@ OFFSET ORIG. : %" PRIu64 "\t\tSIZE ORIG. : %" PRIu32 "\n\
 OFFSET THUMB.: %" PRIu64 "\t\tSIZE THUMB.: %" PRIu32 "\n\
 OFFSET SMALL : %" PRIu64 "\t\tSIZE SMALL : %" PRIu32 "\n\
 ORIGINAL: %" PRIu32 " x %" PRIu32 "\n",
-           metadata->img_id, sha_printable, metadata->is_valid, metadata->unused_16, metadata->offset[ORIG_RES],
-           metadata->size[ORIG_RES], metadata->offset[THUMB_RES], metadata->size[THUMB_RES],
-           metadata->offset[SMALL_RES], metadata->size[SMALL_RES], metadata->orig_res[0], metadata->orig_res[1]);
+            metadata->img_id, sha_printable, metadata->is_valid, metadata->unused_16, metadata->offset[ORIG_RES],
+            metadata->size[ORIG_RES], metadata->offset[THUMB_RES], metadata->size[THUMB_RES],
+            metadata->offset[SMALL_RES], metadata->size[SMALL_RES], metadata->orig_res[0], metadata->orig_res[1]);
     printf("*****************************************\n");
 }
 
+/**
+ * @brief Open imgFS file, read the header and all the metadata.
+ *
+ * @param imgfs_filename Path to the imgFS file
+ * @param open_mode Mode for fopen(), eg.: "rb", "rb+", etc.
+ * @param imgfs_file Structure for header, metadata and file pointer.
+ */
+int do_open(const char* imgfs_filename,
+            const char* open_mode,
+            struct imgfs_file* imgfs_file) {
+    // Check for NULL pointers
+    M_REQUIRE_NON_NULL(imgfs_filename);
+    M_REQUIRE_NON_NULL(open_mode);
+    M_REQUIRE_NON_NULL(imgfs_file);
+
+    FILE* file = fopen(imgfs_filename, open_mode);
+    if (file == NULL) {
+        return ERR_IO;
+    }
+
+    size_t read = fread(&imgfs_file->header, sizeof(struct imgfs_header), 1, file);
+    if (read != 1) {
+        fclose(file); // CLose the file if we encounter an error
+        return ERR_IO;
+    }
+
+    imgfs_file->metadata = calloc(imgfs_file->header.max_files, sizeof(struct img_metadata));
+    if (imgfs_file->metadata == NULL) {
+        fclose(file); // Close the file if we encounter an error
+        return ERR_OUT_OF_MEMORY;
+    }
+
+    read = fread(imgfs_file->metadata,sizeof(struct img_metadata), imgfs_file->header.max_files,file);
+    if (read != imgfs_file->header.max_files) {
+        free(imgfs_file->metadata);
+        imgfs_file->metadata = NULL;
+
+        fclose(file); // Close the file if we encounter an error
+        return ERR_IO;
+    }
+
+    imgfs_file->file = file; // If everything went well, we can assign the file pointer
+
+    return ERR_NONE;
+}
+
+/**
+ * @brief Do some clean-up for imgFS file handling.
+ *
+ * @param imgfs_file Structure for header, metadata and file pointer to be freed/closed.
+ */
+void do_close(struct imgfs_file* imgfs_file) {
+    if (imgfs_file->metadata != NULL) {
+        free(imgfs_file->metadata);
+        imgfs_file->metadata = NULL;
+    }
+    if (imgfs_file->file != NULL) {
+        if (fclose(imgfs_file->file) == EOF) {
+            perror("Failed to close file");
+        }
+        imgfs_file->file = NULL;
+    }
+}
