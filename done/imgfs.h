@@ -44,52 +44,10 @@
 extern "C" {
 #endif
 
-// TODO : Check if consts should stay or if we should rather make a "constructor" with no setters for
-//  fields that are not to be modified
-
-/**
- * @brief A header of fixed size which gathers the elements of configuration of the system.
- *
- * Its content is created during the imgfs creation.
- * /!\ max_files and resized_res MUST NOT be modified after creation /!\
+/* **********************************************************************
+ * TODO WEEK 07: DEFINE YOUR STRUCTS HERE.
+ * **********************************************************************
  */
-struct imgfs_header {
-    char name[MAX_IMGFS_NAME + 1];  // The name of the database
-    uint32_t version;   // The version of the database
-    uint32_t nb_files;  // The current number of images in the system
-    const uint32_t max_files;   // The maximum number of images the system can contain
-    const uint16_t resized_res[2 * (NB_RES - 1)]; // The resolutions of the "thumbnail" and "small" images (width then height for both)
-    uint32_t unused_32; // unused
-    uint64_t unused_64; // unused
-};
-
-/**
- * @brief A metadata array whose size is specified by the max_files field of the imgfs_header
- *
- * Each entry of the array describes the metadata of a single image, especially their position in the file.
- * The size of the metadata never changes, it is specified in the header and dynamically allocated to max_files.
- * To delete an image, one should set is_valid to EMPTY
- */
-struct img_metadata {
-    char img_id[MAX_IMG_ID + 1];    // Unique identifier (name) for the image
-    unsigned char SHA[SHA256_DIGEST_LENGTH];    // The image Hash code
-    uint32_t orig_res[NB_RES - 1];  // Array of two 32-bit uint representing the resolution of the original image
-    uint32_t size[NB_RES];  // Array of NB_RES 32-bit uint representing the memory sizes (in bytes) of
-    //  images at different resolutions (thumbnail, small, original, in this order)
-    uint64_t offset[NB_RES];    // Array of NB_RES 64-bit uint representing the positions in the "image database" file
-    //  of images at the various possible resolutions (in the same order for size)
-    uint16_t is_valid;  // Indicates wether the image is in use (value NON_EMPTY) or not (value EMPTY)
-    uint16_t unused_16; // unused
-};
-
-/**
- * @brief An image itself. Each image is stored in a contiguous part of the file, one after the other
- */
-struct imgfs_file {
-    FILE* file; // Indicates the FILE* containing everything (on the disk)
-    struct imgfs_header header; // The header of the image database
-    struct img_metadata* metadata;   // The metadata of the images in the database (dynamic array)
-};
 
 /**
  * @brief Prints imgFS header informations.
