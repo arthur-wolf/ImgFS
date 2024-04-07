@@ -39,17 +39,32 @@ int help(int useless _unused, char** useless_too _unused)
 /**********************************************************************
  * Opens imgFS file and calls do_list().
  ********************************************************************** */
-int do_list_cmd(int argc, char** argv) //TODO CHECK CORRECTNESS
-{
+int do_list_cmd(int argc, char** argv) {
     M_REQUIRE_NON_NULL(argv);
-    if (argc <= 0) {
+    if (argc <= 1) {  // No file name provided
         return ERR_INVALID_ARGUMENT;
     }
 
-    do_list((imgfs_file*) argv[0], (do_list_mode) argv[1], argv[2]);
+    const char* dbFilename = argv[1];
+    struct imgfs_file imgfsFile;
+    int result = do_open(dbFilename, "r", &imgfsFile);
 
-    return ERR_NONE;
+    if (result != ERR_NONE) {
+        perror("Error opening database file");
+        return result;
+    }
+
+    result = do_list(&imgfsFile, STDOUT, NULL);
+    if (result != ERR_NONE) {
+        perror("Error listing database");
+        // Not returning here, as we want to ensure the file is closed
+    }
+
+    do_close(&imgfsFile); // Ensure file is closed and resources are cleaned up
+
+    return result;
 }
+
 
 /**********************************************************************
  * Prepares and calls do_create command.
