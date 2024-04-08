@@ -14,7 +14,14 @@
 #include <stdlib.h>
 #include <string.h>
 
-const int commands_size = sizeof(commands) / sizeof(commands[0]); // for iterating over commands
+command_mapping commands[] = {
+    {"list", do_list_cmd},
+    {"create", do_create_cmd},
+    {"help", help},
+    {"delete", do_delete_cmd}
+};
+
+int commands_size = sizeof(commands) / sizeof(commands[0]);
 
 /*******************************************************************************
  * MAIN
@@ -29,10 +36,11 @@ int main(int argc, char* argv[])
         argc--; argv++; // Skip the program's name
 
         int commandFound = 0;
-        for (int i = 0; i < commands_size; ++i) {
+        for (int i = 0; i < commands_size ; ++i) {
             if (strcmp(argv[0], commands[i].name) == 0) {
                 // Execute the function corresponding to the command
                 commandFound = 1;
+                argc--; argv++; // Call the function with the right arguments, as specified in the handout
                 ret = commands[i].func(argc, argv);
                 break; // Exit the loop once the command is executed since each command is unique
             }

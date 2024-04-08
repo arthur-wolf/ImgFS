@@ -41,9 +41,9 @@ void print_header(const struct imgfs_header* header)
 \nVERSION: %" PRIu32 "\n\
 IMAGE COUNT: %" PRIu32 "\t\tMAX IMAGES: %" PRIu32 "\n\
 THUMBNAIL: %" PRIu16 " x %" PRIu16 "\tSMALL: %" PRIu16 " x %" PRIu16 "\n",
-            header->name, header->version, header->nb_files, header->max_files, header->resized_res[THUMB_RES * 2],
-            header->resized_res[THUMB_RES * 2 + 1], header->resized_res[SMALL_RES * 2],
-            header->resized_res[SMALL_RES * 2 + 1]);
+           header->name, header->version, header->nb_files, header->max_files, header->resized_res[THUMB_RES * 2],
+           header->resized_res[THUMB_RES * 2 + 1], header->resized_res[SMALL_RES * 2],
+           header->resized_res[SMALL_RES * 2 + 1]);
     printf("*********** IMGFS HEADER END ************\n\
 *****************************************\n");
 }
@@ -61,9 +61,9 @@ OFFSET ORIG. : %" PRIu64 "\t\tSIZE ORIG. : %" PRIu32 "\n\
 OFFSET THUMB.: %" PRIu64 "\t\tSIZE THUMB.: %" PRIu32 "\n\
 OFFSET SMALL : %" PRIu64 "\t\tSIZE SMALL : %" PRIu32 "\n\
 ORIGINAL: %" PRIu32 " x %" PRIu32 "\n",
-            metadata->img_id, sha_printable, metadata->is_valid, metadata->unused_16, metadata->offset[ORIG_RES],
-            metadata->size[ORIG_RES], metadata->offset[THUMB_RES], metadata->size[THUMB_RES],
-            metadata->offset[SMALL_RES], metadata->size[SMALL_RES], metadata->orig_res[0], metadata->orig_res[1]);
+           metadata->img_id, sha_printable, metadata->is_valid, metadata->unused_16, metadata->offset[ORIG_RES],
+           metadata->size[ORIG_RES], metadata->offset[THUMB_RES], metadata->size[THUMB_RES],
+           metadata->offset[SMALL_RES], metadata->size[SMALL_RES], metadata->orig_res[0], metadata->orig_res[1]);
     printf("*****************************************\n");
 }
 
@@ -76,7 +76,8 @@ ORIGINAL: %" PRIu32 " x %" PRIu32 "\n",
  */
 int do_open(const char* imgfs_filename,
             const char* open_mode,
-            struct imgfs_file* imgfs_file) {
+            struct imgfs_file* imgfs_file)
+{
     // Check for NULL pointers
     M_REQUIRE_NON_NULL(imgfs_filename);
     M_REQUIRE_NON_NULL(open_mode);
@@ -118,15 +119,18 @@ int do_open(const char* imgfs_filename,
  *
  * @param imgfs_file Structure for header, metadata and file pointer to be freed/closed.
  */
-void do_close(struct imgfs_file* imgfs_file) {
-    if (imgfs_file->metadata != NULL) {
-        free(imgfs_file->metadata);
-        imgfs_file->metadata = NULL;
-    }
-    if (imgfs_file->file != NULL) {
-        if (fclose(imgfs_file->file) == EOF) {
-            perror("Failed to close file");
+void do_close(struct imgfs_file* imgfs_file)
+{
+    if (imgfs_file != NULL) {
+        if (imgfs_file->metadata != NULL) {
+            free(imgfs_file->metadata);
+            imgfs_file->metadata = NULL;
         }
-        imgfs_file->file = NULL;
+        if (imgfs_file->file != NULL) {
+            if (fclose(imgfs_file->file) == EOF) {
+                perror("Failed to close file");
+            }
+            imgfs_file->file = NULL;
+        }
     }
 }

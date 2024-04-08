@@ -39,13 +39,16 @@ int help(int useless _unused, char** useless_too _unused)
 /**********************************************************************
  * Opens imgFS file and calls do_list().
  ********************************************************************** */
-int do_list_cmd(int argc, char** argv) {
+int do_list_cmd(int argc, char** argv)
+{
     M_REQUIRE_NON_NULL(argv);
-    if (argc <= 1) {  // No file name provided
+    if (argc < 1) {  // No file name provided
         return ERR_INVALID_ARGUMENT;
+    } else if (argc >= 2) {  // Too many arguments
+        return ERR_INVALID_COMMAND;
     }
 
-    const char* dbFilename = argv[1];
+    const char* dbFilename = argv[0];
     struct imgfs_file imgfsFile;
     int result = do_open(dbFilename, "r", &imgfsFile);
 

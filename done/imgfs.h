@@ -44,9 +44,6 @@
 extern "C" {
 #endif
 
-// TODO : Check if consts should stay or if we should rather make a "constructor" with no setters for
-//  fields that are not to be modified
-
 /**
  * @brief A header of fixed size which gathers the elements of configuration of the system.
  *
