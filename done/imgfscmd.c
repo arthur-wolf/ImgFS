@@ -14,14 +14,14 @@
 #include <stdlib.h>
 #include <string.h>
 
-command_mapping commands[] = {
+const command_mapping commands[] = {
     {"list", do_list_cmd},
     {"create", do_create_cmd},
     {"help", help},
     {"delete", do_delete_cmd}
 };
 
-int commands_size = sizeof(commands) / sizeof(commands[0]);
+const int commands_size = sizeof(commands) / sizeof(commands[0]);
 
 /*******************************************************************************
  * MAIN

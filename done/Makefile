@@ -14,7 +14,7 @@
 TEST_DIR = $(PWD)/../provided/tests
 
 ## You can change the tag to run week07, week08, etc.
-IMAGE := chappeli/compsys24-feedback:latest
+IMAGE := chappeli/cs202-feedback:latest
 
 #########################################################################
 # DO NOT EDIT BELOW THIS LINE
@@ -133,7 +133,7 @@ endif
 	gdb -ex 'set debuginfod enabled off' \
 		-ex 'cd ../provided/tests/unit/' \
 		-ex 'set environment CK_FORK=no' \
-		-ex 'break $(TEST)_fn' -ex 'run' \
+		-ex 'break $(TEST)' -ex 'run' \
 		-ex 'n' '$(PWD)/../provided/tests/unit/unit-test-$(EXE)'
 
 define e2e_test
@@ -141,6 +141,7 @@ robot -v srcdir:$(PWD) -v datadir:$(TEST_DIR)/data $(TEST_DIR)/end-to-end/$1 ;
 endef
 end2end-tests: $(TARGETS)
 	$(call e2e_test,week07.robot)
+	$(call e2e_test,week08.robot)
 
 check: end2end-tests unit-tests
 

@@ -3,6 +3,15 @@
 #include <stdio.h>
 #include "util.h"
 
+/**
+ * @brief Displays (on stdout) imgFS metadata.
+ *
+ * @param imgfs_file In memory structure with header and metadata.
+ * @param output_mode What style to use for displaying infos.
+ * @param json A pointer to a string containing the list in JSON format if output_mode is JSON.
+ *      It will be dynamically allocated by the function. Ignored for other output modes.
+ * @return some error code.
+ */
 int do_list(const struct imgfs_file* imgfs_file, enum do_list_mode output_mode, char** json)
 {
     M_REQUIRE_NON_NULL(imgfs_file);
