@@ -27,13 +27,22 @@ static const uint16_t MAX_SMALL_RES = 512;
  ********************************************************************** */
 int help(int useless _unused, char** useless_too _unused)
 {
-    /* **********************************************************************
-     * TODO WEEK 08: WRITE YOUR CODE HERE.
-     * **********************************************************************
-     */
-
-    TO_BE_IMPLEMENTED();
-    return NOT_IMPLEMENTED;
+    puts("imgfscmd [COMMAND] [ARGUMENTS]");
+    puts("  help: displays this help.");
+    puts("  list <imgFS_filename>: list imgFS content.");
+    puts("  create <imgFS_filename> [options]: create a new imgFS.");
+    puts("      options are:");
+    puts("          -max_files <MAX_FILES>: maximum number of files.");
+    puts("                                  default value is 128");
+    puts("                                  maximum value is 4294967295");
+    puts("          -thumb_res <X_RES> <Y_RES>: resolution for thumbnail images.");
+    puts("                                  default value is 64x64");
+    puts("                                  maximum value is 128x128");
+    puts("          -small_res <X_RES> <Y_RES>: resolution for small images.");
+    puts("                                  default value is 256x256");
+    puts("                                  maximum value is 512x512");
+    puts("  delete <imgFS_filename> <imgID>: delete image imgID from imgFS.");
+    return 0;
 }
 
 /**********************************************************************
