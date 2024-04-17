@@ -10,4 +10,5 @@ http-test-server
 
 *.xml
 *.html
+!index.html
 *.jpg
