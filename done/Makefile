@@ -1,4 +1,4 @@
-# Makefile for CS-202 course - spring 2024
+# Makefile-tmp for CS-202 course - spring 2024
 # Author: Ludovic Mermod, Jean-Cédric Chappelier & Édouard Bugnion
 # Date: Mars 2024
 
@@ -11,10 +11,10 @@
 
 # Note: builds with address sanitizer by default
 
-TEST_DIR = $(PWD)/../provided/tests
+TEST_DIR = $(PWD)/../done/tests
 
 ## You can change the tag to run week07, week08, etc.
-IMAGE := chappeli/cs202-feedback:latest
+IMAGE := chappeli/cs202-feedback:week08
 
 #########################################################################
 # DO NOT EDIT BELOW THIS LINE

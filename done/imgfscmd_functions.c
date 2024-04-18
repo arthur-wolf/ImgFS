@@ -42,35 +42,34 @@ int help(int useless _unused, char** useless_too _unused)
     puts("                                  default value is 256x256");
     puts("                                  maximum value is 512x512");
     puts("  delete <imgFS_filename> <imgID>: delete image imgID from imgFS.");
-    return 0;
+
+    return ERR_NONE;
 }
 
 /**********************************************************************
  * Opens imgFS file and calls do_list().
  ********************************************************************** */
+ // One argument : imgFS_filename
 int do_list_cmd(int argc, char** argv)
 {
     M_REQUIRE_NON_NULL(argv);
     if (argc < 1) {  // No file name provided
         return ERR_INVALID_ARGUMENT;
-    } else if (argc >= 2) {  // Too many arguments
+    } else if (argc > 1) {  // Too many arguments
         return ERR_INVALID_COMMAND;
     }
 
     const char* dbFilename = argv[0];
+    M_REQUIRE_NON_NULL(dbFilename);
+
     struct imgfs_file imgfsFile;
     int result = do_open(dbFilename, "r", &imgfsFile);
 
     if (result != ERR_NONE) {
-        perror("Error opening database file");
         return result;
     }
 
     result = do_list(&imgfsFile, STDOUT, NULL);
-    if (result != ERR_NONE) {
-        perror("Error listing database");
-        // Not returning here, as we want to ensure the file is closed
-    }
 
     do_close(&imgfsFile); // Ensure file is closed and resources are cleaned up
 
@@ -81,29 +80,116 @@ int do_list_cmd(int argc, char** argv)
 /**********************************************************************
  * Prepares and calls do_create command.
 ********************************************************************** */
+// At least one argument : imgFS_filename + options
 int do_create_cmd(int argc, char** argv)
 {
+    // Argument validation
+    M_REQUIRE_NON_NULL(argv); // We need an imgFS filename
+    if (argc < 1) {
+        return ERR_NOT_ENOUGH_ARGUMENTS;
+    }
 
-    puts("Create");
-    /* **********************************************************************
-     * TODO WEEK 08: WRITE YOUR CODE HERE (and change the return if needed).
-     * **********************************************************************
-     */
+    // Default values
+    const char* imgfs_filename = argv[0]; // The first argument is the imgFS filename (mandatory)
+    uint32_t max_files = default_max_files;
+    uint16_t thumb_res[2] = {default_thumb_res, default_thumb_res};
+    uint16_t small_res[2] = {default_small_res, default_small_res};
 
-    TO_BE_IMPLEMENTED();
-    return NOT_IMPLEMENTED;
+    // Parse options
+    // Start at 1 because the first argument cannot be repeated
+    for (int i = 1; i < argc; ++i) {
+        if (strcmp(argv[i], "-max_files") == 0) {
+            if (i + 1 >= argc) { // If we don't have a value after the -max_files option
+                return ERR_NOT_ENOUGH_ARGUMENTS;
+            }
+            // Convert the value to an unsigned 32-bit integer
+            max_files = atouint32(argv[i + 1]);
+            if (max_files == 0) { // If the value is not a valid number
+                return ERR_MAX_FILES;
+            }
+            ++i; // Skip the value of the -max_files option
+        } else if (strcmp(argv[i], "-thumb_res") == 0) { // atouint32 conversion error
+            if (i + 2 >= argc) { // If we don't have two values after the -thumb_res option
+                return ERR_NOT_ENOUGH_ARGUMENTS;
+            }
+            thumb_res[0] = atouint16(argv[i + 1]);
+            thumb_res[1] = atouint16(argv[i + 2]);
+            if (thumb_res[0] == 0 || thumb_res[1] == 0) { // atouint16 conversion error
+                return ERR_RESOLUTIONS;
+            }
+            if (thumb_res[0] > MAX_THUMB_RES || thumb_res[1] > MAX_THUMB_RES) { // Resolution too big
+                return ERR_RESOLUTIONS;
+            }
+            i += 2; // Skip the values of the -thumb_res option
+        } else if (strcmp(argv[i], "-small_res") == 0) {
+            if (i + 2 >= argc) {
+                return ERR_NOT_ENOUGH_ARGUMENTS;
+            }
+            small_res[0] = atouint16(argv[i + 1]);
+            small_res[1] = atouint16(argv[i + 2]);
+            if (small_res[0] == 0 || small_res[1] == 0) { // atouint16 conversion error
+                return ERR_RESOLUTIONS;
+            }
+            if (small_res[0] > MAX_SMALL_RES || small_res[1] > MAX_SMALL_RES) { // Resolution too big
+                return ERR_RESOLUTIONS;
+            }
+            i += 2; // Skip the values of the -small_res option
+        } else {
+            return ERR_INVALID_ARGUMENT; // Undefined option
+        }
+    }
+
+    // Create the imgFS
+    struct imgfs_file imgfsFile ={
+        .header = {
+            .max_files = max_files,
+            .resized_res = {thumb_res[0], thumb_res[1], small_res[0], small_res[1]}
+        }
+    };
+    strncpy(imgfsFile.header.name, imgfs_filename, MAX_IMGFS_NAME);
+
+    int err = do_create(imgfs_filename, &imgfsFile);
+    do_close(&imgfsFile);
+
+    return err;
 }
 
 /**********************************************************************
  * Deletes an image from the imgFS.
- */
-int do_delete_cmd(int argc, char** argv)
-{
-    /* **********************************************************************
-     * TODO WEEK 08: WRITE YOUR CODE HERE (and change the return if needed).
-     * **********************************************************************
-     */
+ **********************************************************************/
+// Two arguments: imgFS_filename + imgID
+int do_delete_cmd(int argc, char** argv) {
+    // Argument validation
+    M_REQUIRE_NON_NULL(argv); // We need an imgFS filename and an image ID
+    if (argc < 2) {
+        return ERR_NOT_ENOUGH_ARGUMENTS;
+    } else if (argc > 2) {
+        return ERR_INVALID_ARGUMENT;
+    }
 
-    TO_BE_IMPLEMENTED();
-    return NOT_IMPLEMENTED;
+    char* imgFS_filename = argv[0];
+    char* imgID = argv[1];
+    M_REQUIRE_NON_NULL(imgFS_filename);
+    M_REQUIRE_NON_NULL(imgID);
+
+    // Validate imgID
+    if ((strlen(imgID) == 0) || (strlen(imgID) > MAX_IMG_ID)) {
+        return ERR_INVALID_IMGID;
+    }
+
+    // Open the imgFS file
+    struct imgfs_file imgfs_file;
+    int err = do_open(imgFS_filename, "r+b", &imgfs_file);
+    if (err != ERR_NONE) {
+        return err;
+    }
+
+    // Perform the delete operation
+    int result = do_delete(imgID, &imgfs_file);
+
+    // Cleanup
+    do_close(&imgfs_file);
+
+    return result;
 }
+

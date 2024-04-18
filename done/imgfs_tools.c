@@ -83,33 +83,33 @@ int do_open(const char* imgfs_filename,
     M_REQUIRE_NON_NULL(open_mode);
     M_REQUIRE_NON_NULL(imgfs_file);
 
-    FILE* file = fopen(imgfs_filename, open_mode);
-    if (file == NULL) {
+    // Open the file and store the file pointer in the structure
+    imgfs_file->file = fopen(imgfs_filename, open_mode);
+    if (imgfs_file->file == NULL) {
         return ERR_IO;
     }
 
-    size_t read = fread(&imgfs_file->header, sizeof(struct imgfs_header), 1, file);
-    if (read != 1) {
-        fclose(file); // CLose the file if we encounter an error
+    // Read the header from the file and store it into the header from structure
+    if (fread(&imgfs_file->header, sizeof(struct imgfs_header), 1, imgfs_file->file) != 1) {
+        do_close(imgfs_file); // Close the file if we encounter an error
         return ERR_IO;
     }
 
+    // Allocate the metadata
     imgfs_file->metadata = calloc(imgfs_file->header.max_files, sizeof(struct img_metadata));
     if (imgfs_file->metadata == NULL) {
-        fclose(file); // Close the file if we encounter an error
+        do_close(imgfs_file); // Close the file if we encounter an error
         return ERR_OUT_OF_MEMORY;
     }
 
-    read = fread(imgfs_file->metadata,sizeof(struct img_metadata), imgfs_file->header.max_files,file);
-    if (read != imgfs_file->header.max_files) {
+    // Read metadata from file and store it into metadata from structure
+    if(fread(imgfs_file->metadata,sizeof(struct img_metadata), imgfs_file->header.max_files,imgfs_file->file) != imgfs_file->header.max_files) {
         free(imgfs_file->metadata);
         imgfs_file->metadata = NULL;
 
-        fclose(file); // Close the file if we encounter an error
+        do_close(imgfs_file); // Close the file if we encounter an error
         return ERR_IO;
     }
-
-    imgfs_file->file = file; // If everything went well, we can assign the file pointer
 
     return ERR_NONE;
 }

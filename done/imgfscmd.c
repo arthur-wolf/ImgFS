@@ -28,7 +28,7 @@ const int commands_size = sizeof(commands) / sizeof(commands[0]);
  */
 int main(int argc, char* argv[])
 {
-    int ret = 0;
+    int ret = ERR_INVALID_COMMAND;
 
     if (argc < 2) { // We need at least 2 arguments : the program's name and the command's name
         ret = ERR_NOT_ENOUGH_ARGUMENTS;
@@ -44,11 +44,6 @@ int main(int argc, char* argv[])
                 ret = commands[i].func(argc, argv);
                 break; // Exit the loop once the command is executed since each command is unique
             }
-        }
-
-        // If no command was matched, we were given an invalid command name
-        if (!commandFound) {
-            ret = ERR_INVALID_COMMAND;
         }
     }
 

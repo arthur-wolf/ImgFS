@@ -1,4 +1,6 @@
 #include "imgfs.h"
+
+#include <stdlib.h>
 #include <string.h>
 
 /**
@@ -14,40 +16,38 @@ int do_create(const char* imgfs_filename, struct imgfs_file* imgfs_file) {
     M_REQUIRE_NON_NULL(imgfs_filename);
     M_REQUIRE_NON_NULL(imgfs_file);
 
-    // Open or create the file, overwriting if it exists
-    FILE *file = fopen(imgfs_filename, "wb");
-    if (!file) {
+    // Open the file for writing, creates it if it does not exist
+    imgfs_file->file = fopen(imgfs_filename, "wb");
+    if (imgfs_file->file == NULL) {
         return ERR_IO;
     }
-
     // Assign the database name and other constants to the header
+    // max_files and resized_res are already set
     strncpy(imgfs_file->header.name, CAT_TXT, MAX_IMGFS_NAME);
     imgfs_file->header.version = 0; // Initial version
     imgfs_file->header.nb_files = 0; // No files initially
-    // max_files and resized_res are already set
 
     // Write the header to the file and close it if there is an error
-    if (fwrite(&(imgfs_file->header), sizeof(struct imgfs_header), 1, file) != 1) {
-        fclose(file);
+    if (fwrite(&(imgfs_file->header), sizeof(struct imgfs_header), 1, imgfs_file->file) != 1) {
+        do_close(imgfs_file);
         return ERR_IO;
     }
 
     // Initialize and write the metadata array
-    int written_items = 1; // header is already written
-    struct img_metadata empty_metadata = {0}; // Initialize the metadata to zero
-    for (uint32_t i = 0; i < imgfs_file->header.max_files; i++) {
-        if (fwrite(&empty_metadata, sizeof(struct img_metadata), 1, file) != 1) {
-            fclose(file);
-            return ERR_IO;
-        }
-        written_items++;
+    imgfs_file->metadata = calloc(imgfs_file->header.max_files, sizeof(struct img_metadata));
+    if (imgfs_file->metadata == NULL) {
+        do_close(imgfs_file);
+        return ERR_OUT_OF_MEMORY;
     }
 
-    // Close the file
-    fclose(file);
+    int max_files = imgfs_file->header.max_files;
+    if(fwrite(imgfs_file->metadata, sizeof(struct img_metadata), max_files, imgfs_file->file) != max_files) {
+        do_close(imgfs_file);
+        return ERR_IO;
+    }
 
-    // Output the number of items written
-    printf("%d item(s) written\n", written_items);
+    // Output the number of items written (max_files + 1 to account for the header)
+    printf("%d item(s) written\n", max_files + 1);
 
     return ERR_NONE;
 }
