@@ -40,14 +40,14 @@ int do_create(const char* imgfs_filename, struct imgfs_file* imgfs_file) {
         return ERR_OUT_OF_MEMORY;
     }
 
-    int max_files = imgfs_file->header.max_files;
+    size_t max_files = imgfs_file->header.max_files;
     if(fwrite(imgfs_file->metadata, sizeof(struct img_metadata), max_files, imgfs_file->file) != max_files) {
         do_close(imgfs_file);
         return ERR_IO;
     }
 
     // Output the number of items written (max_files + 1 to account for the header)
-    printf("%d item(s) written\n", max_files + 1);
+    printf("%zu item(s) written\n", max_files + 1);
 
     return ERR_NONE;
 }
