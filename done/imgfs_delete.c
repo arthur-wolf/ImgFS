@@ -4,6 +4,18 @@
 #include <stdlib.h>
 #include <string.h>
 
+/**
+ * @brief Deletes an image from a imgFS imgFS.
+ *
+ * Effectively, it only invalidates the is_valid field and updates the
+ * metadata.  The raw data content is not erased, it stays where it
+ * was (and  new content is always appended to the end; no garbage
+ * collection).
+ *
+ * @param img_id The ID of the image to be deleted.
+ * @param imgfs_file The main in-memory data structure
+ * @return Some error code. 0 if no error.
+ */
 int do_delete(const char* img_id, struct imgfs_file* imgfs_file) {
     // Check if the input pointers are NULL
     M_REQUIRE_NON_NULL(img_id);

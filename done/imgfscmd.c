@@ -12,7 +12,6 @@
 #include "util.h"   // for _unused
 
 #include <vips/vips.h>
-#include <stdlib.h>
 #include <string.h>
 
 const command_mapping commands[] = {
@@ -29,6 +28,8 @@ const int commands_size = sizeof(commands) / sizeof(commands[0]);
  */
 int main(int argc, char* argv[])
 {
+    VIPS_INIT(argv[0]);
+
     int ret = ERR_INVALID_COMMAND;
 
     if (argc < 2) { // We need at least 2 arguments : the program's name and the command's name
@@ -51,6 +52,8 @@ int main(int argc, char* argv[])
         fprintf(stderr, "ERROR: %s\n", ERR_MSG(ret));
         help(argc, argv);
     }
+
+    vips_shutdown();
 
     return ret;
 }

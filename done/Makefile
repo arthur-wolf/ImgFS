@@ -12,10 +12,10 @@
 # Note: builds with address sanitizer by default
 
 # Add options for the compiler to include the library's headers
-CFLAGS += $(shell pkg-config vips --cflags)
+CFLAGS += $(shell pkg-config vips glib-2.0 --cflags)
 
 # Add the library to the linker
-LDLIBS += $(shell pkg-config vips --libs)
+LDLIBS += $(shell pkg-config vips glib-2.0 --libs)
 
 TEST_DIR = $(PWD)/../done/tests
 
