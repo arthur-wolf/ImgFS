@@ -13,6 +13,8 @@
 
 #include <stdio.h>  // for FILE
 #include <stdint.h> // for uint32_t
+#include <string.h> // for strncmp
+
 
 #ifdef __cplusplus
 extern "C" {
