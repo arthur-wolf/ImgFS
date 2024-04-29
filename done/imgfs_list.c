@@ -23,6 +23,7 @@ int do_list(const struct imgfs_file* imgfs_file, enum do_list_mode output_mode, 
             printf("<< empty imgFS >>\n");
         } else {
             for (uint32_t i = 0; i < imgfs_file->header.max_files; ++i) {
+                // Print only valid metadata
                 if (imgfs_file->metadata[i].is_valid == NON_EMPTY) {
                     print_metadata(&imgfs_file->metadata[i]);
                 }

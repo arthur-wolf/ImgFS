@@ -23,28 +23,30 @@ int do_delete(const char* img_id, struct imgfs_file* imgfs_file)
     M_REQUIRE_NON_NULL(imgfs_file);
 
     // Find the image in the metadata
-    size_t found_index = imgfs_file->header.max_files;
+    size_t index = imgfs_file->header.max_files; // Invalid index, will be modified if the image is found
     for (uint32_t i = 0; i < imgfs_file->header.max_files; i++) {
         if (strcmp(imgfs_file->metadata[i].img_id, img_id) == 0 && imgfs_file->metadata[i].is_valid != EMPTY) {
-            found_index = i;
+            index = i;
             break;
         }
     }
 
     // The image does not exist or is already deleted
-    if (found_index == imgfs_file->header.max_files) {
+    if (index == imgfs_file->header.max_files) {
         return ERR_IMAGE_NOT_FOUND;
     }
 
     // Invalidate the metadata entry
-    imgfs_file->metadata[found_index].is_valid = EMPTY;
+    imgfs_file->metadata[index].is_valid = EMPTY;
 
-    // Write the metadata changes to disk
-    size_t offset = sizeof(struct imgfs_header) + sizeof(struct img_metadata) * found_index;
+    // Find the offset of the metadata in the file
+    size_t offset = sizeof(struct imgfs_header) + sizeof(struct img_metadata) * index;
     if(fseek(imgfs_file->file, (long)offset, SEEK_SET) != 0) {
         return ERR_IO;
     }
-    if(fwrite(&imgfs_file->metadata[found_index], sizeof(struct img_metadata), 1, imgfs_file->file) != 1) {
+
+    // Write the updated metadata to disk
+    if(fwrite(&imgfs_file->metadata[index], sizeof(struct img_metadata), 1, imgfs_file->file) != 1) {
         return ERR_IO;
     }
 
@@ -52,11 +54,12 @@ int do_delete(const char* img_id, struct imgfs_file* imgfs_file)
     imgfs_file->header.nb_files--;
     imgfs_file->header.version++;
 
-    // Write the updated header to disk
+    // Find the offset of the header in the file
     if(fseek(imgfs_file->file, 0, SEEK_SET) != 0) {
         return ERR_IO;
     }
 
+    // Write the updated header to disk
     if(fwrite(&imgfs_file->header, sizeof(struct imgfs_header), 1, imgfs_file->file) != 1) {
         return ERR_IO;
     }

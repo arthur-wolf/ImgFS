@@ -19,7 +19,7 @@ int lazily_resize(int resolution, struct imgfs_file* imgfs_file, size_t index)
     M_REQUIRE_NON_NULL(imgfs_file->metadata);
 
     // ------------------------------------------------------------------------------------
-    //                                parameters checks
+    //                                   PARAMETER CHECKS                                  
     // ------------------------------------------------------------------------------------
 
     // Check if the index is not too big
@@ -48,7 +48,7 @@ int lazily_resize(int resolution, struct imgfs_file* imgfs_file, size_t index)
     }
 
     // ------------------------------------------------------------------------------------
-    //                                resizing
+    //                                  RESIZING THE IMAGE                                 
     // ------------------------------------------------------------------------------------
 
     // Allocate memory to store the image
@@ -100,36 +100,40 @@ int lazily_resize(int resolution, struct imgfs_file* imgfs_file, size_t index)
         g_object_unref(VIPS_OBJECT(original));
         g_object_unref(VIPS_OBJECT(resized));
         free(buffer);
-        g_free(resized_buffer);
+        free(resized_buffer);
         return ERR_IO;
     }
 
+    // Free the VipsImages, we don't need them anymore
     g_object_unref(VIPS_OBJECT(original));
     g_object_unref(VIPS_OBJECT(resized));
+
+    // ------------------------------------------------------------------------------------
+    //                            WRITING THE RESIZED IMAGE TO THE FILE 
+    // ------------------------------------------------------------------------------------
 
     // Move the file pointer to the end of the file
     if (fseek(imgfs_file->file, 0, SEEK_END) != 0) {
         free(buffer);
-        g_free(resized_buffer);
+        free(resized_buffer);
         return ERR_IO;
     }
-
-    // ------------------------------------------------------------------------------------
-    //                                   ERRORS down here
-    // ------------------------------------------------------------------------------------
 
     // Write the resized image to the disk
     size_t val = fwrite(resized_buffer, resized_size, 1, imgfs_file->file);
     if (val != 1) {
         free(buffer);
         free(resized_buffer);
-
         return ERR_IO;
     }
 
-    // Update the metadata
-    imgfs_file->metadata[index].offset[resolution] = ftell(imgfs_file->file) - resized_size;
-    imgfs_file->metadata[index].size[resolution] = resized_size;
+    // ------------------------------------------------------------------------------------
+    //                           UPDATING THE METADATA
+    // ------------------------------------------------------------------------------------
+
+    // Update the metadata offset and size for the new resolution
+    imgfs_file->metadata[index].offset[resolution] = (size_t)ftell(imgfs_file->file) - resized_size;
+    imgfs_file->metadata[index].size[resolution] = (uint32_t)resized_size;
 
     // Move the file pointer to the metadata of the image
     if (fseek(imgfs_file->file, (long)(sizeof(struct imgfs_header) + index * sizeof(struct img_metadata)), SEEK_SET) != 0) {
