@@ -17,7 +17,7 @@ CFLAGS += $(shell pkg-config vips glib-2.0 --cflags)
 # Add the library to the linker
 LDLIBS += $(shell pkg-config vips glib-2.0 --libs)
 
-TEST_DIR = $(PWD)/../done/tests
+TEST_DIR = $(PWD)/../provided/tests
 
 ## You can change the tag to run week07, week08, etc.
 IMAGE := chappeli/cs202-feedback:latest
