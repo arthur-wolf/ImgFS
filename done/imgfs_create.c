@@ -12,7 +12,8 @@
  *
  * Note that the header of the imgfs_file contains ONLY max_files and resized_res
  */
-int do_create(const char* imgfs_filename, struct imgfs_file* imgfs_file) {
+int do_create(const char* imgfs_filename, struct imgfs_file* imgfs_file)
+{
     M_REQUIRE_NON_NULL(imgfs_filename);
     M_REQUIRE_NON_NULL(imgfs_file);
 

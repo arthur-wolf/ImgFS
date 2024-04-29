@@ -16,7 +16,8 @@
  * @param imgfs_file The main in-memory data structure
  * @return Some error code. 0 if no error.
  */
-int do_delete(const char* img_id, struct imgfs_file* imgfs_file) {
+int do_delete(const char* img_id, struct imgfs_file* imgfs_file)
+{
     // Check if the input pointers are NULL
     M_REQUIRE_NON_NULL(img_id);
     M_REQUIRE_NON_NULL(imgfs_file);

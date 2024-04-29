@@ -49,7 +49,7 @@ int help(int useless _unused, char** useless_too _unused)
 /**********************************************************************
  * Opens imgFS file and calls do_list().
  ********************************************************************** */
- // One argument : imgFS_filename
+// One argument : imgFS_filename
 int do_list_cmd(int argc, char** argv)
 {
     M_REQUIRE_NON_NULL(argv);
@@ -140,7 +140,7 @@ int do_create_cmd(int argc, char** argv)
     }
 
     // Create the imgFS
-    struct imgfs_file imgfsFile ={
+    struct imgfs_file imgfsFile = {
         .header = {
             .max_files = max_files,
             .resized_res = {thumb_res[0], thumb_res[1], small_res[0], small_res[1]}
@@ -158,7 +158,8 @@ int do_create_cmd(int argc, char** argv)
  * Deletes an image from the imgFS.
  **********************************************************************/
 // Two arguments: imgFS_filename + imgID
-int do_delete_cmd(int argc, char** argv) {
+int do_delete_cmd(int argc, char** argv)
+{
     // Argument validation
     M_REQUIRE_NON_NULL(argv); // We need an imgFS filename and an image ID
     if (argc < 2) {
