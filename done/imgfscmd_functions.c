@@ -85,7 +85,7 @@ int do_create_cmd(int argc, char** argv)
 {
     // Validate arguments
     M_REQUIRE_NON_NULL(argv); // We need an imgFS filename
-    if (argc < 1) { 
+    if (argc < 1) {
         return ERR_NOT_ENOUGH_ARGUMENTS;
     }
 
@@ -114,7 +114,7 @@ int do_create_cmd(int argc, char** argv)
             if (i + 2 >= argc) {    // If we don't have two values for the -thumb_res option
                 return ERR_NOT_ENOUGH_ARGUMENTS;
             }
-            
+
             thumb_res[0] = atouint16(argv[i + 1]);
             thumb_res[1] = atouint16(argv[i + 2]);
 
@@ -162,7 +162,7 @@ int do_create_cmd(int argc, char** argv)
     // Copy the imgFS filename to the header
     strncpy(imgfsFile.header.name, imgfs_filename, MAX_IMGFS_NAME);
 
-    // 
+    //
     int err = do_create(imgfs_filename, &imgfsFile);
     do_close(&imgfsFile);
 

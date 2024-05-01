@@ -102,7 +102,7 @@ int do_open(const char* imgfs_filename,
         return ERR_OUT_OF_MEMORY;
     }
 
-    // Read metadata from file and store it 
+    // Read metadata from file and store it
     if(fread(imgfs_file->metadata,sizeof(struct img_metadata), imgfs_file->header.max_files, imgfs_file->file) != imgfs_file->header.max_files) {
         free(imgfs_file->metadata);
         imgfs_file->metadata = NULL;

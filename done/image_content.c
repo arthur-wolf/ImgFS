@@ -112,19 +112,19 @@ int lazily_resize(int resolution, struct imgfs_file* imgfs_file, size_t index)
     // --------------------------------------------------------------------------------------------
 
     /** EXPLANATION OF THE USE OF GOTO STATEMENTS FOR CLEANUP :
-    *   We have decided to use goto statements because it allows us to avoid repeating the same 
+    *   We have decided to use goto statements because it allows us to avoid repeating the same
     *   cleanup code multiple times in case of errors.
-    *   This way, we can simply jump to the cleanup label, free the memory that has been allocated and 
+    *   This way, we can simply jump to the cleanup label, free the memory that has been allocated and
     *   return the error code.
     *   At the beginning, we have some parameters checks that return directly and do not need any cleanup,
     *   which is why they don't have a goto statement.
     */
 
-    cleanup:
-        if (buffer) free(buffer);
-        if (original) g_object_unref(VIPS_OBJECT(original));
-        if (resized) g_object_unref(VIPS_OBJECT(resized));
-        if (resized_buffer) free(resized_buffer);
+cleanup:
+    if (buffer) free(buffer);
+    if (original) g_object_unref(VIPS_OBJECT(original));
+    if (resized) g_object_unref(VIPS_OBJECT(resized));
+    if (resized_buffer) free(resized_buffer);
 
     return result;
 }
