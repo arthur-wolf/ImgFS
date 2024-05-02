@@ -133,3 +133,23 @@ void do_close(struct imgfs_file* imgfs_file)
         }
     }
 }
+
+/**
+ * @brief Convert a string to a resolution.
+ *
+ * @param str The string to convert
+ * @return The resolution or -1 if the string is invalid
+ */
+int resolution_atoi (const char* str)
+{
+    if (str == NULL) return -1;
+
+    if (!strcmp(str, "thumb") || !strcmp(str, "thumbnail")) {
+        return THUMB_RES;
+    } else if (!strcmp(str, "small")) {
+        return SMALL_RES;
+    } else if (!strcmp(str, "orig")  || !strcmp(str, "original")) {
+        return ORIG_RES;
+    }
+    return -1;
+}

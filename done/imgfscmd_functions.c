@@ -23,6 +23,30 @@ static const uint16_t MAX_THUMB_RES = 128;
 static const uint16_t MAX_SMALL_RES = 512;
 
 /**********************************************************************
+ * Creates a new name for the image.
+ **********************************************************************/
+static void create_name(const char* img_id, int resolution, char** new_name) 
+{
+
+}
+
+/**********************************************************************
+ * Writes the image to the disk.
+ **********************************************************************/
+static int write_disk_image(const char *filename, const char *image_buffer, uint32_t image_size) 
+{
+    return ERR_NONE;
+}
+
+/**********************************************************************
+ * Reads the image from the disk.
+ **********************************************************************/
+static int read_disk_image(const char *path, char **image_buffer, uint32_t *image_size) 
+{
+    return ERR_NONE;
+}
+
+/**********************************************************************
  * Displays some explanations.
  ********************************************************************** */
 int help(int useless _unused, char** useless_too _unused)
@@ -41,6 +65,10 @@ int help(int useless _unused, char** useless_too _unused)
     puts("          -small_res <X_RES> <Y_RES>: resolution for small images.");
     puts("                                  default value is 256x256");
     puts("                                  maximum value is 512x512");
+    puts("  read <imgFS_filename> <imgID> [originial|orig|thumbnail|thumb|small]:");
+    puts("      read an image from the imgFS and save it to a file:");
+    puts("      default resolution is \"original\".");
+    puts("  insert <imgFS_filename> <imgID> <filename>: insert a new image in the imgFS.");
     puts("  delete <imgFS_filename> <imgID>: delete image imgID from imgFS.");
 
     return ERR_NONE;
@@ -209,3 +237,68 @@ int do_delete_cmd(int argc, char** argv)
     return result;
 }
 
+/**********************************************************************
+ * Reads an image from the imgFS and saves it to a file.
+ **********************************************************************/
+int do_read_cmd(int argc, char **argv)
+{
+    M_REQUIRE_NON_NULL(argv);
+    if (argc != 2 && argc != 3) return ERR_NOT_ENOUGH_ARGUMENTS;
+
+    const char * const img_id = argv[1];
+
+    const int resolution = (argc == 3) ? resolution_atoi(argv[2]) : ORIG_RES;
+    if (resolution == -1) return ERR_RESOLUTIONS;
+
+    struct imgfs_file myfile;
+    zero_init_var(myfile);
+    int error = do_open(argv[0], "rb+", &myfile);
+    if (error != ERR_NONE) return error;
+
+    char *image_buffer = NULL;
+    uint32_t image_size = 0;
+    error = do_read(img_id, resolution, &image_buffer, &image_size, &myfile);
+    do_close(&myfile);
+    if (error != ERR_NONE) {
+        return error;
+    }
+
+    // Extracting to a separate image file.
+    char* tmp_name = NULL;
+    create_name(img_id, resolution, &tmp_name);
+    if (tmp_name == NULL) return ERR_OUT_OF_MEMORY;
+    error = write_disk_image(tmp_name, image_buffer, image_size);
+    free(tmp_name);
+    free(image_buffer);
+
+    return error;
+}
+
+/**********************************************************************
+ * Inserts an image into the imgFS.
+ **********************************************************************/
+int do_insert_cmd(int argc, char **argv)
+{
+    M_REQUIRE_NON_NULL(argv);
+    if (argc != 3) return ERR_NOT_ENOUGH_ARGUMENTS;
+
+    struct imgfs_file myfile;
+    zero_init_var(myfile);
+    int error = do_open(argv[0], "rb+", &myfile);
+    if (error != ERR_NONE) return error;
+
+    char *image_buffer = NULL;
+    uint32_t image_size;
+
+    // Reads image from the disk.
+    error = read_disk_image (argv[2], &image_buffer, &image_size);
+    if (error != ERR_NONE) {
+        do_close(&myfile);
+        return error;
+    }
+
+    error = do_insert(image_buffer, image_size, argv[1], &myfile);
+    free(image_buffer);
+    do_close(&myfile);
+    return error;
+}
