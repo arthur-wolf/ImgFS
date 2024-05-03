@@ -1,4 +1,4 @@
-# Makefile-tmp for CS-202 course - spring 2024
+# Makefile for CS-202 course - spring 2024
 # Author: Ludovic Mermod, Jean-Cédric Chappelier & Édouard Bugnion
 # Date: Mars 2024
 
@@ -10,12 +10,6 @@
 #       check: local tests
 
 # Note: builds with address sanitizer by default
-
-# Add options for the compiler to include the library's headers
-CFLAGS += $(shell pkg-config vips glib-2.0 --cflags)
-
-# Add the library to the linker
-LDLIBS += $(shell pkg-config vips glib-2.0 --libs)
 
 TEST_DIR = $(PWD)/../provided/tests
 
@@ -137,11 +131,11 @@ ifndef EXE
 	$(error Missing executable name)
 endif
 	gdb -ex 'set debuginfod enabled off' \
-	    -ex 'cd ../provided/tests/unit/' \
+	    -ex 'cd $(TEST_DIR)/unit/' \
 	    -ex 'set environment CK_FORK=no' \
 	    -ex 'break $(TEST)' -ex 'run'    \
 	    -ex 'n' -ex 'layout src'         \
-	    '$(PWD)/../provided/tests/unit/unit-test-$(EXE)'
+	    '$(TEST_DIR)/unit/unit-test-$(EXE)'
 
 define e2e_test
 robot -v srcdir:$(PWD) -v datadir:$(TEST_DIR)/data $(TEST_DIR)/end-to-end/$1 ;

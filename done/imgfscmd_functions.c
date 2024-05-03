@@ -25,24 +25,96 @@ static const uint16_t MAX_SMALL_RES = 512;
 /**********************************************************************
  * Creates a new name for the image.
  **********************************************************************/
-static void create_name(const char* img_id, int resolution, char** new_name) 
-{
+static void create_name(const char* img_id, int resolution, char** new_name) {
+    if (img_id == NULL) return;
 
+    const char* resolution_suffix = NULL;
+
+    // Determine the appropriate suffix based on the resolution
+    switch (resolution) {
+        case ORIG_RES:
+            resolution_suffix = "_orig";
+            break;
+        case SMALL_RES:
+            resolution_suffix = "_small";
+            break;
+        case THUMB_RES:
+            resolution_suffix = "_thumb";
+            break;
+        default:
+            // Unknown resolution
+            return;
+    }
+
+    // Calculate the length of the new string (+4 for ".jpg" and +1 for the null terminator)
+    size_t new_name_length = strlen(img_id) + strlen(resolution_suffix) + 5;
+
+    // Allocate memory for the new string
+    *new_name = (char*)malloc(new_name_length * sizeof(char));
+    if (*new_name == NULL) return;
+
+    // Construct the new filename
+    sprintf(*new_name, "%s%s.jpg", img_id, resolution_suffix);
 }
 
 /**********************************************************************
  * Writes the image to the disk.
  **********************************************************************/
-static int write_disk_image(const char *filename, const char *image_buffer, uint32_t image_size) 
-{
+static int write_disk_image(const char *filename, const char *image_buffer, uint32_t image_size) {
+    M_REQUIRE_NON_NULL(filename);
+    M_REQUIRE_NON_NULL(image_buffer);
+
+    // Open the file for writing in binary mode
+    FILE *fp = fopen(filename, "wb");
+    if (fp == NULL) return ERR_IO;
+
+    // Write the image buffer to the file
+    size_t written = fwrite(image_buffer, sizeof(char), image_size, fp);
+    fclose(fp);  // Always close the file descriptor
+
+    // Check if the write operation wrote the entire buffer
+    if (written != image_size) {
+        return ERR_IO;
+    }
+
     return ERR_NONE;
 }
 
 /**********************************************************************
  * Reads the image from the disk.
  **********************************************************************/
-static int read_disk_image(const char *path, char **image_buffer, uint32_t *image_size) 
+static int read_disk_image(const char *path, char **image_buffer, uint32_t *image_size)
 {
+    M_REQUIRE_NON_NULL(path);
+    M_REQUIRE_NON_NULL(image_buffer);
+    M_REQUIRE_NON_NULL(image_size);
+
+    // Open the file for reading in binary mode
+    FILE *fp = fopen(path, "rb");
+    if (fp == NULL) return ERR_IO;
+
+    // Get the size of the file
+    fseek(fp, 0, SEEK_END);
+    *image_size = ftell(fp);
+    fseek(fp, 0, SEEK_SET);
+
+    // Allocate memory for the image buffer
+    *image_buffer = (char*)malloc(*image_size * sizeof(char));
+    if (*image_buffer == NULL) {
+        fclose(fp);
+        return ERR_OUT_OF_MEMORY;
+    }
+
+    // Read the image from the file
+    size_t read = fread(*image_buffer, sizeof(char), *image_size, fp);
+    fclose(fp);  // Always close the file descriptor
+
+    // Check if we read the entire file
+    if (read != *image_size) {
+        free(*image_buffer);
+        return ERR_IO;
+    }
+
     return ERR_NONE;
 }
 
@@ -291,7 +363,7 @@ int do_insert_cmd(int argc, char **argv)
     uint32_t image_size;
 
     // Reads image from the disk.
-    error = read_disk_image (argv[2], &image_buffer, &image_size);
+    error = read_disk_image(argv[2], &image_buffer, &image_size);
     if (error != ERR_NONE) {
         do_close(&myfile);
         return error;
