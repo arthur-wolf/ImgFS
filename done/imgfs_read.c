@@ -23,7 +23,7 @@ int do_read(const char* img_id, int resolution, char** image_buffer,
     M_REQUIRE_NON_NULL(imgfs_file);
 
     // Find the image with the right img_id
-    int index = -1;
+    size_t index = imgfs_file->header.max_files;
     for (int i = 0; i < imgfs_file->header.max_files; ++i) {
         if (strncmp(img_id, imgfs_file->metadata[i].img_id, MAX_IMG_ID) == 0) {
             index = i;
@@ -32,7 +32,7 @@ int do_read(const char* img_id, int resolution, char** image_buffer,
     }
 
     // There is no image with the requested img_id
-    if (index == -1) return ERR_IMAGE_NOT_FOUND;
+    if (index == imgfs_file->header.max_files) return ERR_IMAGE_NOT_FOUND;
 
     // Check if the image already exists in the requested resolution
     // If not, resize it to the resolution

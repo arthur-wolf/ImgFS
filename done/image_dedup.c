@@ -11,16 +11,15 @@
 int do_name_and_content_dedup(struct imgfs_file* imgfs_file, uint32_t index)
 {
     M_REQUIRE_NON_NULL(imgfs_file);
-    M_REQUIRE_NON_NULL(imgfs_file->metadata);
 
     // If index is too big or the image does not exist
-    if ((index >= imgfs_file->header.max_files) || (imgfs_file->metadata[index].is_valid == EMPTY)) {
+    if ((index >= imgfs_file->header.max_files)) {
         return ERR_IMAGE_NOT_FOUND;
     }
 
     for (uint32_t i = 0; i < imgfs_file->header.max_files; ++i) {
         // If the image is not the same as the one we are looking at and it exists
-        if (i != index && imgfs_file->metadata[i].is_valid == 1) {
+        if (i != index && imgfs_file->metadata[i].is_valid == NON_EMPTY) {
             // If the image has the same ID
             if (strncmp(imgfs_file->metadata[i].img_id, imgfs_file->metadata[index].img_id, MAX_IMG_ID) == 0) {
                 return ERR_DUPLICATE_ID;
@@ -28,7 +27,7 @@ int do_name_and_content_dedup(struct imgfs_file* imgfs_file, uint32_t index)
                 // If the image has the same SHA, copy the size and offset and invalidate the image
                 memcpy(imgfs_file->metadata[index].size, imgfs_file->metadata[i].size, sizeof(uint32_t) * NB_RES);
                 memcpy(imgfs_file->metadata[index].offset, imgfs_file->metadata[i].offset, sizeof(uint64_t) * NB_RES);
-                imgfs_file->metadata[index].is_valid = 0;
+                imgfs_file->metadata[index].is_valid = EMPTY;
 
                 return ERR_NONE;
             }
