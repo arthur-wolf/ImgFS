@@ -24,7 +24,7 @@ int do_read(const char* img_id, int resolution, char** image_buffer,
 
     // Find the image with the right img_id
     size_t index = imgfs_file->header.max_files;
-    for (int i = 0; i < imgfs_file->header.max_files; ++i) {
+    for (size_t i = 0; i < imgfs_file->header.max_files; ++i) {
         if (strncmp(img_id, imgfs_file->metadata[i].img_id, MAX_IMG_ID) == 0) {
             index = i;
             break;
@@ -47,7 +47,7 @@ int do_read(const char* img_id, int resolution, char** image_buffer,
     // Allocate memory for the image content
     *image_buffer = calloc(1, size);
     if (*image_buffer == NULL) return ERR_OUT_OF_MEMORY;
-    
+
     // Read the image content from the file
     // Move the file pointer to the right position
     if (fseek(imgfs_file->file, (long)offset, SEEK_SET) != 0) {
@@ -62,7 +62,7 @@ int do_read(const char* img_id, int resolution, char** image_buffer,
     }
 
     // Update the output parameter
-    *image_size = size;
+    *image_size = (uint32_t)size;
 
     return ERR_NONE;
 }

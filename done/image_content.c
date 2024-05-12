@@ -39,7 +39,7 @@ int lazily_resize(int resolution, struct imgfs_file* imgfs_file, size_t index)
     // --------------------------------------------------------------------------------------------
 
     // Allocate memory for the original image
-    buffer = malloc(imgfs_file->metadata[index].size[ORIG_RES]);
+    buffer = calloc(1, imgfs_file->metadata[index].size[ORIG_RES]);
     if (!buffer) {
         result = ERR_OUT_OF_MEMORY;
         goto cleanup;
@@ -152,10 +152,10 @@ int get_resolution(uint32_t *height, uint32_t *width,
                                          &original, NULL);
 #pragma GCC diagnostic pop
     if (err != ERR_NONE) return ERR_IMGLIB;
-    
+
     *height = (uint32_t) vips_image_get_height(original);
     *width  = (uint32_t) vips_image_get_width (original);
-    
+
     g_object_unref(VIPS_OBJECT(original));
     return ERR_NONE;
 }

@@ -50,7 +50,7 @@ int do_insert(const char* image_buffer, size_t image_size,
 
     strncpy(imgfs_file->metadata[index].img_id, img_id, MAX_IMG_ID);
 
-    imgfs_file->metadata[index].size[ORIG_RES] = image_size;
+    imgfs_file->metadata[index].size[ORIG_RES] = (uint32_t)image_size;
 
     uint32_t width, height;
     int resolution_error = get_resolution(&height, &width, image_buffer, image_size);
@@ -62,8 +62,8 @@ int do_insert(const char* image_buffer, size_t image_size,
     //                      Image deduplication
     //-----------------------------------------------------------------
 
-    int dedup_error = do_name_and_content_dedup(imgfs_file, index);
-    if (do_name_and_content_dedup(imgfs_file, index) != ERR_NONE) return dedup_error;
+    int dedup_error = do_name_and_content_dedup(imgfs_file, (uint32_t)index);
+    if (dedup_error != ERR_NONE) return dedup_error;
 
     //-----------------------------------------------------------------
     //                Writing the image to the disk
@@ -75,8 +75,8 @@ int do_insert(const char* image_buffer, size_t image_size,
         long file_offset = ftell(imgfs_file->file);
         if (fwrite(image_buffer, image_size, 1, imgfs_file->file) != 1) return ERR_IO;
 
-        imgfs_file->metadata[index].offset[ORIG_RES] = file_offset;
-        imgfs_file->metadata[index].size[ORIG_RES] = image_size;
+        imgfs_file->metadata[index].offset[ORIG_RES] = (uint64_t)file_offset;
+        imgfs_file->metadata[index].size[ORIG_RES] = (uint32_t)image_size;
 
         imgfs_file->metadata[index].offset[THUMB_RES] = 0;
         imgfs_file->metadata[index].size[THUMB_RES] = 0;
@@ -101,4 +101,4 @@ int do_insert(const char* image_buffer, size_t image_size,
 
     return ERR_NONE;
 }
-        
+

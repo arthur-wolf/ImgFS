@@ -18,7 +18,9 @@ const command_mapping commands[] = {
     {"list", do_list_cmd},
     {"create", do_create_cmd},
     {"help", help},
-    {"delete", do_delete_cmd}
+    {"delete", do_delete_cmd},
+    {"read", do_read_cmd},
+    {"insert", do_insert_cmd}
 };
 
 const int commands_size = sizeof(commands) / sizeof(commands[0]);
@@ -41,8 +43,7 @@ int main(int argc, char* argv[])
             if (strcmp(argv[0], commands[i].name) == 0) {
                 // Execute the function corresponding to the command
 
-                argc--; argv++; // Call the function with the right arguments, as specified in the handout
-                ret = commands[i].func(argc, argv);
+                ret = commands[i].func(argc - 1, argv + 1);
                 break; // Exit the loop once the command is executed since each command is unique
             }
         }
