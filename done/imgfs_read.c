@@ -48,7 +48,6 @@ int do_read(const char* img_id, int resolution, char** image_buffer,
     *image_buffer = calloc(1, size);
     if (*image_buffer == NULL) return ERR_OUT_OF_MEMORY;
     
-
     // Read the image content from the file
     // Move the file pointer to the right position
     if (fseek(imgfs_file->file, (long)offset, SEEK_SET) != 0) {

@@ -137,8 +137,8 @@ int help(int useless _unused, char** useless_too _unused)
     puts("          -small_res <X_RES> <Y_RES>: resolution for small images.");
     puts("                                  default value is 256x256");
     puts("                                  maximum value is 512x512");
-    puts("  read <imgFS_filename> <imgID> [originial|orig|thumbnail|thumb|small]:");
-    puts("      read an image from the imgFS and save it to a file:");
+    puts("  read   <imgFS_filename> <imgID> [original|orig|thumbnail|thumb|small]:");
+    puts("      read an image from the imgFS and save it to a file.");
     puts("      default resolution is \"original\".");
     puts("  insert <imgFS_filename> <imgID> <filename>: insert a new image in the imgFS.");
     puts("  delete <imgFS_filename> <imgID>: delete image imgID from imgFS.");
