@@ -22,6 +22,8 @@
  * **********************************************************************
  */
 
+typedef int (*EventCallback)(struct http_message* message, int status_code);
+
 int http_init(uint16_t port, EventCallback cb);
 
 int http_receive(void);
