@@ -42,6 +42,11 @@ int do_create(const char* imgfs_filename, struct imgfs_file* imgfs_file)
         return ERR_OUT_OF_MEMORY;
     }
 
+    // Initialize the metadata array
+    for (size_t i = 0; i < imgfs_file->header.max_files; ++i) {
+        imgfs_file->metadata[i].is_valid = EMPTY;
+    }
+
     // Write the metadata to the file and close it if there is an error
     size_t max_files = imgfs_file->header.max_files;
     if(fwrite(imgfs_file->metadata, sizeof(struct img_metadata), max_files, imgfs_file->file) != max_files) {

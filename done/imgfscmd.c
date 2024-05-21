@@ -30,7 +30,9 @@ const int commands_size = sizeof(commands) / sizeof(commands[0]);
  */
 int main(int argc, char* argv[])
 {
-    VIPS_INIT(argv[0]);
+    if (VIPS_INIT(argv[0]) != 0) {
+        vips_error_exit("unable to start VIPS");
+    }
 
     int ret = ERR_INVALID_COMMAND;
 

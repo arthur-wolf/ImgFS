@@ -261,10 +261,6 @@ int do_create_cmd(int argc, char** argv)
         }
     };
 
-    // Copy the imgFS filename to the header
-    strncpy(imgfsFile.header.name, imgfs_filename, MAX_IMGFS_NAME);
-
-    //
     int err = do_create(imgfs_filename, &imgfsFile);
     do_close(&imgfsFile);
 
@@ -298,8 +294,9 @@ int do_delete_cmd(int argc, char** argv)
 
     // Open the imgFS file
     struct imgfs_file imgfs_file;
-    if (do_open(imgFS_filename, "rb+", &imgfs_file) != ERR_NONE) {
-        return ERR_IO;
+    int err = do_open(imgFS_filename, "rb+", &imgfs_file);
+    if (err != ERR_NONE) {
+        return err;
     }
 
     // Perform the delete operation
