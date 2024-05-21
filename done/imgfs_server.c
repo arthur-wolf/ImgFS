@@ -16,9 +16,10 @@
 #include <unistd.h>
 #include <stdlib.h> // abort()
 
-/********************************************************************/
 static void signal_handler(int sig_num _unused)
 {
+    server_shutdown();
+    exit(0);
 }
 
 /********************************************************************/
@@ -42,6 +43,18 @@ static void set_signal_handler(void)
 
 int main (int argc, char *argv[])
 {
+    int err = server_startup(argc, argv);
+    if (err < 0) {
+        perror("server_startup() failed");
+        return err;
+    }
+
+    set_signal_handler();
+
+    while ((err = http_receive()) == ERR_NONE);
+
+    fprintf(stderr, "http_receive() failed\n");
+    fprintf(stderr, "%s\n", ERR_MSG(err));
 
     return 0;
 }

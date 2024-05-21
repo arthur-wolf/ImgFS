@@ -36,8 +36,48 @@ static void *handle_connection(void *arg)
 {
     if (arg == NULL) return &our_ERR_INVALID_ARGUMENT;
 
+    int *sock_ptr = (int *)arg;
+    int sock = *sock_ptr;
+    static int our_ERR_IO = ERR_IO;
+    static int our_ERR_NONE = ERR_NONE;
+
+    char buffer[MAX_HEADER_SIZE];
+    memset(buffer, 0, MAX_HEADER_SIZE);
+
+    // Read the header
+    int total_read = 0;
+    while (total_read < MAX_HEADER_SIZE) {
+        int bytes_read = tcp_read(sock, buffer + total_read, MAX_HEADER_SIZE - total_read);
+        if (bytes_read < 0) {
+            return &our_ERR_IO;
+        }
+        total_read += bytes_read;
+
+        // Check if we have received the end of the headers
+        if (strstr(buffer, HTTP_HDR_END_DELIM) != NULL) {
+            break;
+        }
+    }
+
+    // Check if we have read the entire header
+    if (total_read >= MAX_HEADER_SIZE) {
+        return &our_ERR_IO;
+    }
+
+    // Check for the "test: ok" header
+    if (strstr(buffer, "test: ok") != NULL) {
+        if (http_reply(sock, HTTP_OK, "", "", 0) != ERR_NONE) {
+            return &our_ERR_IO;
+        }
+    } else {
+        if (http_reply(sock, HTTP_BAD_REQUEST, "", "", 0) != ERR_NONE) {
+            return &our_ERR_IO;
+        }
+    }
+
     return &our_ERR_NONE;
 }
+
 
 
 /*******************************************************************
@@ -68,7 +108,28 @@ void http_close(void)
  */
 int http_receive(void)
 {
+    int new_socket = tcp_accept(passive_socket);
+    if (new_socket < 0) {
+        return ERR_IO;
+    }
+
+    int *sock_ptr = malloc(sizeof(int));
+    if (sock_ptr == NULL) {
+        close(new_socket);
+        return ERR_OUT_OF_MEMORY;
+    }
+
+    *sock_ptr = new_socket;
+
+    void *result = handle_connection((void *)sock_ptr);
+    int ret = *(int *)result;
+
+    free(sock_ptr);
+    close(new_socket);
+
+    return ret;
 }
+
 
 /*******************************************************************
  * Serve a file content over HTTP
@@ -82,7 +143,45 @@ int http_serve_file(int connection, const char* filename)
 /*******************************************************************
  * Create and send HTTP reply
  */
-int http_reply(int connection, const char* status, const char* headers, const char *body, size_t body_len)
+int http_reply(int connection, const char* status, const char* headers, const char* body, size_t body_len)
 {
+    if (connection < 0 || status == NULL || headers == NULL || (body == NULL && body_len > 0)) {
+        return ERR_INVALID_ARGUMENT;
+    }
+
+    // Calculate the size of the header part
+    size_t header_len = strlen(HTTP_PROTOCOL_ID) + 1 + strlen(status) + strlen(HTTP_LINE_DELIM) +
+                        strlen(headers) + strlen("Content-Length: ") + 20 + strlen(HTTP_HDR_END_DELIM);
+    
+    // Allocate buffer for the entire message
+    size_t total_len = header_len + body_len;
+    char *buffer = malloc(total_len);
+    if (buffer == NULL) {
+        return ERR_OUT_OF_MEMORY;
+    }
+
+    // Fill the buffer with the HTTP response
+    int ret = snprintf(buffer, header_len + 1, "%s %s%s%sContent-Length: %zu%s",
+                       HTTP_PROTOCOL_ID, status, HTTP_LINE_DELIM, headers, body_len, HTTP_HDR_END_DELIM);
+
+    if (ret < 0 || (size_t)ret >= header_len) {
+        free(buffer);
+        return ERR_IO;
+    }
+
+    // Copy the body (if any) to the buffer
+    if (body_len > 0 && body != NULL) {
+        memcpy(buffer + header_len, body, body_len);
+    }
+
+    // Send the buffer to the socket
+    ssize_t bytes_sent = send(connection, buffer, total_len, 0);
+    free(buffer);
+
+    if (bytes_sent < 0 || (size_t)bytes_sent != total_len) {
+        return ERR_IO;
+    }
+
     return ERR_NONE;
 }
+

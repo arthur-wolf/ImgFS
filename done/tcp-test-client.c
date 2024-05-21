@@ -12,7 +12,8 @@
 #define MAX_SIZE 2048
 #define MAX_BUFFER MAX_SIZE + sizeof("<EOF>")
 
-int get_file_size(const char* file_path) {
+int get_file_size(const char* file_path)
+{
     FILE* file = fopen(file_path, "rb");
     if (file == NULL) {
         perror("Failed to open file");
@@ -26,9 +27,10 @@ int get_file_size(const char* file_path) {
     return file_size;
 }
 
-int connect_client(int argc, char **argv) {
+int connect_client(int argc, char **argv)
+{
     uint16_t port = atouint16(argv[1]);
-    
+
     // Check the number of arguments
     if (argc != 3) {
         fprintf(stderr, "Usage: %s <server_port> <file_path>\n", argv[0]);
@@ -58,7 +60,7 @@ int connect_client(int argc, char **argv) {
     return client_sock;
 }
 
-int main(int argc, char **argv) 
+int main(int argc, char **argv)
 {
     int client_sock = connect_client(argc, argv);
     char* file_path = argv[2];
@@ -70,7 +72,7 @@ int main(int argc, char **argv)
 
     // Get the file size
     int file_size = get_file_size(file_path);
-    if (file_size < 0) return file_size; 
+    if (file_size < 0) return file_size;
     else if ((size_t)file_size > MAX_SIZE) {
         tcp_send(client_sock, "[-] ERROR : file size is too big\n", sizeof("[-] ERROR : file size is too big\n"));
         fprintf(stderr, "[-] File size is too big. Abort ...\n");
@@ -86,7 +88,7 @@ int main(int argc, char **argv)
 
     // Send the file size to the server
     tcp_send(client_sock, buffer, strlen(buffer));
-    
+
     // Read the response from the server
     tcp_read(client_sock, buffer, MAX_SIZE);
     printf("[+] Server response: %s\n", buffer);

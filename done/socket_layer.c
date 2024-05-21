@@ -10,7 +10,7 @@
 
 #define MAX_PENDING_CONNECTIONS 5
 
-int tcp_server_init(uint16_t port) 
+int tcp_server_init(uint16_t port)
 {
     // Create a TCP socket
     int socket_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -19,7 +19,7 @@ int tcp_server_init(uint16_t port)
         return ERR_IO;
     }
     printf("[+] TCP server socket created\n");
-    
+
     // Set up the address structure and zero it out
     struct sockaddr_in server_addr;
     memset(&server_addr, 0, sizeof(server_addr));
@@ -44,14 +44,14 @@ int tcp_server_init(uint16_t port)
         return ERR_IO;
     }
     printf("[+] Server socket listening...\n");
-    
+
     return socket_fd;
 }
 
 /**
  * @brief Blocking call that accepts a new TCP connection
  */
-int tcp_accept(int passive_socket) 
+int tcp_accept(int passive_socket)
 {
     return accept(passive_socket, NULL, NULL);
 }

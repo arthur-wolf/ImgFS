@@ -12,7 +12,8 @@
 #define MAX_SIZE 2048
 #define MAX_BUFFER MAX_SIZE + sizeof("<EOF>")
 
-void serve(int server_sock) {
+void serve(int server_sock)
+{
     while (1) {
         printf("-------------------------\n");
         printf("[+] Waiting for a size...\n");
@@ -46,7 +47,7 @@ void serve(int server_sock) {
         } else {
             tcp_send(client_sock, "Small file", sizeof("Small file"));
         }
-        
+
         // -------------- RECEIVE FILE --------------------
 
         printf("[+] About to receive a file of %d bytes ...\n", size);
@@ -56,8 +57,8 @@ void serve(int server_sock) {
 
         char *eof = strstr(buffer, "<EOF>");
         if (eof != NULL) {
-            *eof = '\0';
-            printf("[+] Received file :\n"); 
+            *eof = '\0'; // Remove the EOF marker
+            printf("[+] Received file :\n");
             printf("******************************************\n");
             printf("%s", buffer);
             printf("******************************************\n");
@@ -66,7 +67,7 @@ void serve(int server_sock) {
             printf("[-] File transfer failed");
             tcp_send(client_sock, "[-] File transfer failed\n", sizeof("[-] File transfer failed\n"));
         }
-    
+
         printf("[+] Closing the connection ...\n\n");
 
         // Close the connection
@@ -92,5 +93,5 @@ int main(int argc, char **argv)
 
     // The server never reaches this point
     close(server_sock);
-    return 0;    
+    return 0;
 }
