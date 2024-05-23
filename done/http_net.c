@@ -145,24 +145,29 @@ int http_serve_file(int connection, const char* filename)
  */
 int http_reply(int connection, const char* status, const char* headers, const char* body, size_t body_len)
 {
-    if (connection < 0 || status == NULL || headers == NULL || (body == NULL && body_len > 0)) {
+    M_REQUIRE_NON_NULL(status);
+    M_REQUIRE_NON_NULL(headers);
+    if (connection < 0 || (body == NULL && body_len > 0)) {
         return ERR_INVALID_ARGUMENT;
     }
 
-    // Calculate the size of the header part
-    size_t header_len = strlen(HTTP_PROTOCOL_ID) + 1 + strlen(status) + strlen(HTTP_LINE_DELIM) +
-                        strlen(headers) + strlen("Content-Length: ") + 20 + strlen(HTTP_HDR_END_DELIM);
-    
-    // Allocate buffer for the entire message
-    size_t total_len = header_len + body_len;
-    char *buffer = malloc(total_len);
-    if (buffer == NULL) {
-        return ERR_OUT_OF_MEMORY;
-    }
+    const char* content_len = "Content-Length: ";
+    char body_len_str [20];
+    snprintf(body_len_str, "%zu", body_len);
 
+    // Calculate the size of the header part
+    size_t header_len = strlen(HTTP_PROTOCOL_ID) + strlen(status) + strlen(HTTP_LINE_DELIM) +
+                        strlen(headers) + strlen(content_len) + strlen(body_len_str) + strlen(HTTP_HDR_END_DELIM);
+
+    // Allocate buffer for the entire message
+    size_t total_len = header_len + body_len + 1; 
+    char *buffer = calloc(1, total_len);
+    if (buffer == NULL) return ERR_OUT_OF_MEMORY;
+    
     // Fill the buffer with the HTTP response
-    int ret = snprintf(buffer, header_len + 1, "%s %s%s%sContent-Length: %zu%s",
-                       HTTP_PROTOCOL_ID, status, HTTP_LINE_DELIM, headers, body_len, HTTP_HDR_END_DELIM);
+    int ret = snprintf(buffer, MAX_HEADER_SIZE, "%s%s%s%s%s%s%s", 
+            HTTP_PROTOCOL_ID, status, HTTP_LINE_DELIM,
+            headers, content_len, body_len_str, HTTP_HDR_END_DELIM);
 
     if (ret < 0 || (size_t)ret >= header_len) {
         free(buffer);
@@ -175,7 +180,7 @@ int http_reply(int connection, const char* status, const char* headers, const ch
     }
 
     // Send the buffer to the socket
-    ssize_t bytes_sent = send(connection, buffer, total_len, 0);
+    ssize_t bytes_sent = send(connection, buffer, total_len - 1, 0);
     free(buffer);
 
     if (bytes_sent < 0 || (size_t)bytes_sent != total_len) {
