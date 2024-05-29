@@ -7,8 +7,11 @@ TARGETS := imgfsstruct imgfstools imgfslist
 TARGETS += imgfscreate imgfsdelete
 TARGETS += imgfsdedup imgfscontent
 TARGETS += imgfsresolutions imgfsinsert imgfsread
+TARGETS += http
 
 CFLAGS += -g
+
+CFLAGS += -DIN_CS202_UNIT_TEST
 
 CPPFLAGS += -fsanitize=address
 LDFLAGS  += -fsanitize=address
@@ -102,6 +105,8 @@ OBJS += $(SRC_DIR)/image_dedup.o $(SRC_DIR)/image_content.o
 
 OBJS += $(SRC_DIR)/imgfs_insert.o $(SRC_DIR)/imgfs_read.o
 
+OBJS += $(SRC_DIR)/http_prot.o
+
 # ======================================================================
 unit-test-imgfsstruct.o: unit-test-imgfsstruct.c $(SRC_DIR)/imgfs.h
 
@@ -154,7 +159,7 @@ clean::
 dump-clean:
 	-$(RM) $(DATA_DIR)/dump*
 
-dist-clean: clean
+dist-clean: clean dump-clean
 	-$(RM) $(foreach T,$(TARGETS),unit-test-$(T))
 
 

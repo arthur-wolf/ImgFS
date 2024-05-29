@@ -7,6 +7,12 @@
 
 #pragma once
 
+#ifdef IN_CS202_UNIT_TEST
+#define static_unless_test
+#else
+#define static_unless_test static
+#endif
+
 #define MAX_HEADERS 40
 
 #define HTTP_HDR_KV_DELIM  ": "
@@ -72,3 +78,7 @@ int http_get_var(const struct http_string* url, const char* name, char* out, siz
  * @brief Compare method with verb and return 1 if they are equal, 0 otherwise
  */
 int http_match_verb(const struct http_string* method, const char* verb);
+
+static_unless_test const char* get_next_token(const char* message, const char* delimiter, struct http_string* output);
+
+static_unless_test const char* http_parse_headers(const char* header_start, struct http_message* output);

@@ -18,6 +18,144 @@ inline static void ck_assert_has_header(const struct http_message *msg, const ch
 }
 
 // ======================================================================
+//                           CUSTOM TESTS
+// ======================================================================
+
+// ======================================================================
+START_TEST(http_match_uri_custom) {
+    start_test_print;
+
+    const char *str = "/universal/resource/identifier";
+    struct http_message http_msg;
+    http_msg.uri.val = str;
+    http_msg.uri.len = strlen(str) - 1;
+
+    ck_assert_int_eq(http_match_uri(&http_msg, "/universal/resource"), 1);
+    ck_assert_int_eq(http_match_uri(&http_msg, "/universal"), 1);
+    ck_assert_int_eq(http_match_uri(&http_msg, "/universalt"), 0);
+
+    end_test_print;
+}
+
+START_TEST(http_match_verb_custom) {
+    start_test_print;
+
+    const char *str1 = "POST / HTTP/1.1";
+    const char *str2 = "GET / HTTP/1.1";
+    
+
+
+    struct http_string http_str1;
+    http_str1.val = str1;
+    http_str1.len = 4;
+
+    struct http_string http_str2;
+    http_str2.val = str2;
+    http_str2.len = 3;
+    
+    ck_assert_int_eq(http_match_verb(&http_str1, "POST"), 1);
+    ck_assert_int_eq(http_match_verb(&http_str2, "GET"), 1);
+    ck_assert_int_eq(http_match_verb(&http_str2, "GET /"), 0);
+    ck_assert_int_eq(http_match_verb(&http_str2, "G"), 0);
+
+    end_test_print;
+}
+
+START_TEST(http_get_var_custom) 
+{
+    start_test_print;
+
+    char out[10];
+    memset(out, 0, 10);
+
+    const char *str = "http://localhost:8000/imgfs/read?res=orig&img_id=mure.jpg&test=thisisreallylong";
+    struct http_string http_str = {.val = str, .len = strlen(str)};
+
+    ck_assert_int_eq(http_get_var(&http_str, "res", out, 10), 4);
+    out[4] = '\0'; // null-terminate
+    ck_assert_str_eq(out, "orig");
+
+    ck_assert_int_eq(http_get_var(&http_str, "img_id", out, 10), 8);
+    out[8] = '\0'; // null-terminate
+    ck_assert_str_eq(out, "mure.jpg");
+
+    ck_assert_int_eq(http_get_var(&http_str, "max_files", out, 10), 0);
+
+    ck_assert_int_eq(http_get_var(&http_str, "test", out, 10), ERR_RUNTIME);
+
+    end_test_print;
+}
+
+// ======================================================================
+START_TEST(get_next_token_custom)
+{
+    start_test_print;
+
+    const char *in1 = "abcdefg";
+    const char *in2 = "Content-Length: 0\r\nAccept: */*";
+    const char *in3 = "0\r\nAccept: */*";
+    struct http_string out;
+
+
+    const char *ret = get_next_token(in1, "de", &out);
+    printf("expected output : \"abc\", got : \"%.*s\"\n", (int)out.len ,out.val);
+    printf("ret : |%s|\n", ret);
+
+    puts("====================================");
+
+    ret = get_next_token(in2, ": ", &out);
+    printf("expected output : \"Content-Length\", got : \"%.*s\"\n", (int)out.len ,out.val);
+    printf("ret : |%s|\n", ret);
+
+    puts("====================================");
+
+    ret = get_next_token(in3, "\r\n", &out);
+    printf("expected output : \"0\", got : \"%.*s\"\n", (int)out.len ,out.val);
+    printf("ret : |%s|\n", ret);
+
+    puts("====================================");
+
+    end_test_print;
+}
+
+START_TEST(http_parse_headers_custom)
+{
+    start_test_print;
+
+    const char *in = "Host: localhost:8000\r\nUser-Agent: curl/8.5.0\r\nAccept: */*\r\n\r\n";
+
+    struct http_message out;
+    memset(&out, 0, sizeof(out));
+    int content_len;
+    
+    const char* pos = http_parse_headers(in, &out);
+
+    ck_assert_int_eq(out.num_headers, 3);
+    
+    ck_assert_int_eq(http_match_verb(&out.headers[0].key, "Host"), 1);
+    ck_assert_int_eq(out.headers[0].key.len, 4);
+    ck_assert_int_eq(http_match_verb(&out.headers[0].value, "localhost:8000"), 1);
+    ck_assert_int_eq(out.headers[0].value.len, 14);
+
+    ck_assert_int_eq(http_match_verb(&out.headers[1].key, "User-Agent"), 1);
+    ck_assert_int_eq(out.headers[1].key.len, 10);
+    ck_assert_int_eq(http_match_verb(&out.headers[1].value, "curl/8.5.0"), 1);
+    ck_assert_int_eq(out.headers[1].value.len, 10);
+
+    ck_assert_int_eq(http_match_verb(&out.headers[2].key, "Accept"), 1);
+    ck_assert_int_eq(out.headers[2].key.len, 6);
+    ck_assert_int_eq(http_match_verb(&out.headers[2].value, "*/*"), 1);
+    ck_assert_int_eq(out.headers[2].value.len, 3);
+
+    end_test_print;
+}
+END_TEST
+
+// ======================================================================
+//                          PROVIDED TESTS
+// ======================================================================
+
+// ======================================================================
 START_TEST(http_match_uri_null_params)
 {
     start_test_print;
@@ -283,6 +421,12 @@ END_TEST
 Suite *http_test_suite()
 {
     Suite *s = suite_create("Tests http_prot implementation");
+
+    Add_Test(s, http_match_uri_custom);
+    Add_Test(s, http_match_verb_custom);
+    Add_Test(s, http_get_var_custom);
+    Add_Test(s, get_next_token_custom);
+    Add_Test(s, http_parse_headers_custom);
 
     Add_Test(s, http_match_uri_null_params);
     Add_Test(s, http_match_uri_valid);

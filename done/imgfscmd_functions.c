@@ -21,6 +21,7 @@ static const uint16_t default_small_res = 256;
 // max values
 static const uint16_t MAX_THUMB_RES = 128;
 static const uint16_t MAX_SMALL_RES = 512;
+static const uint32_t MAX_MAX_FILES = 4294967295;
 
 /**********************************************************************
  * Creates a new name for the image.
@@ -125,25 +126,25 @@ static int read_disk_image(const char *path, char **image_buffer, uint32_t *imag
  ********************************************************************** */
 int help(int useless _unused, char** useless_too _unused)
 {
-    puts("imgfscmd [COMMAND] [ARGUMENTS]");
-    puts("  help: displays this help.");
-    puts("  list <imgFS_filename>: list imgFS content.");
-    puts("  create <imgFS_filename> [options]: create a new imgFS.");
-    puts("      options are:");
-    puts("          -max_files <MAX_FILES>: maximum number of files.");
-    puts("                                  default value is 128");
-    puts("                                  maximum value is 4294967295");
-    puts("          -thumb_res <X_RES> <Y_RES>: resolution for thumbnail images.");
-    puts("                                  default value is 64x64");
-    puts("                                  maximum value is 128x128");
-    puts("          -small_res <X_RES> <Y_RES>: resolution for small images.");
-    puts("                                  default value is 256x256");
-    puts("                                  maximum value is 512x512");
-    puts("  read   <imgFS_filename> <imgID> [original|orig|thumbnail|thumb|small]:");
-    puts("      read an image from the imgFS and save it to a file.");
-    puts("      default resolution is \"original\".");
-    puts("  insert <imgFS_filename> <imgID> <filename>: insert a new image in the imgFS.");
-    puts("  delete <imgFS_filename> <imgID>: delete image imgID from imgFS.");
+    printf("imgfscmd [COMMAND] [ARGUMENTS]\n");
+    printf("  help: displays this help.\n");
+    printf("  list <imgFS_filename>: list imgFS content.\n");
+    printf("  create <imgFS_filename> [options]: create a new imgFS.\n");
+    printf("      options are:\n");
+    printf("          -max_files <MAX_FILES>: maximum number of files.\n");
+    printf("                                  default value is %u\n", default_max_files);
+    printf("                                  maximum value is %u\n", MAX_MAX_FILES);
+    printf("          -thumb_res <X_RES> <Y_RES>: resolution for thumbnail images.\n");
+    printf("                                  default value is %ux%u\n", default_thumb_res, default_thumb_res);
+    printf("                                  maximum value is %ux%u\n", MAX_THUMB_RES, MAX_THUMB_RES);
+    printf("          -small_res <X_RES> <Y_RES>: resolution for small images.\n");
+    printf("                                  default value is %ux%u\n", default_small_res, default_small_res);
+    printf("                                  maximum value is %ux%u\n", MAX_SMALL_RES, MAX_SMALL_RES);
+    printf("  read   <imgFS_filename> <imgID> [original|orig|thumbnail|thumb|small]:\n");
+    printf("      read an image from the imgFS and save it to a file.\n");
+    printf("      default resolution is \"original\".\n");
+    printf("  insert <imgFS_filename> <imgID> <filename>: insert a new image in the imgFS.\n");
+    printf("  delete <imgFS_filename> <imgID>: delete image imgID from imgFS.\n");
 
     return ERR_NONE;
 }
