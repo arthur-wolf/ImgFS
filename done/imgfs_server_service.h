@@ -17,3 +17,11 @@ int server_startup (int argc, char **argv);
 void server_shutdown (void);
 
 int handle_http_message(struct http_message* msg, int connection);
+
+static int handle_list_call(int connection);
+
+static int handle_read_call(struct http_message* msg, int connection);
+
+static int handle_delete_call(struct http_message* msg, int connection);
+
+static int handle_insert_call(struct http_message* msg, int connection);

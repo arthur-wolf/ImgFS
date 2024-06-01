@@ -20,9 +20,6 @@ LDLIBS   += -fsanitize=address
 CFLAGS	 += $(shell pkg-config --cflags vips)
 LDLIBS	 += $(shell pkg-config --libs vips)
 
-CFLAGS	 += $(shell pkg-config --cflags json-c)
-LDLIBS	 += $(shell pkg-config --libs json-c)
-
 EXECS=$(foreach name,$(TARGETS),unit-test-$(name))
 
 .PHONY: unit-tests all $(TARGETS) execs

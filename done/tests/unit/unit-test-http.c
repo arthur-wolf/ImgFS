@@ -2,6 +2,8 @@
 #include "test.h"
 #include <check.h>
 
+#define IN_CS202_UNIT_TESTs
+
 #define ck_assert_http_str_eq(a, b)                                                                                    \
     ck_assert_msg(strncmp(a.val, b, a.len) == 0 && a.len == strlen(b),                                                 \
                   "Assertion " #a " == " #b " failed, " #a " == \"%*.*s\"", (int) a.len, (int) a.len, a.val)

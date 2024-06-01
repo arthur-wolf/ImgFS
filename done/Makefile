@@ -18,9 +18,11 @@ IMAGE := chappeli/cs202-feedback:latest
 
 # Add options for the compiler to include the library's headers
 CFLAGS += $(shell pkg-config vips --cflags)
+CFLAGS += -I/usr/include/json-c
 
 # Add the library to the linker
 LDLIBS += $(shell pkg-config vips --libs)
+LDLIBS += -ljson-c
 
 #########################################################################
 # DO NOT EDIT BELOW THIS LINE
@@ -152,6 +154,7 @@ end2end-tests: $(TARGETS)
 	$(call e2e_test,week07.robot)
 	$(call e2e_test,week08.robot)
 	$(call e2e_test,week10.robot)
+	$(call e2e_test,week13.robot)
 
 check: end2end-tests unit-tests
 
