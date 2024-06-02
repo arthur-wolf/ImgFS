@@ -168,10 +168,8 @@ int do_list_cmd(int argc, char** argv)
     struct imgfs_file imgfsFile;
     int result = do_open(dbFilename, "r", &imgfsFile);
 
-    if (result != ERR_NONE) {
-        return result;
-    }
-
+    if (result != ERR_NONE) return result;
+    
     result = do_list(&imgfsFile, STDOUT, NULL);
 
     do_close(&imgfsFile); // Ensure file is closed and resources are cleaned up
@@ -188,9 +186,7 @@ int do_create_cmd(int argc, char** argv)
 {
     // Validate arguments
     M_REQUIRE_NON_NULL(argv); // We need an imgFS filename
-    if (argc < 1) {
-        return ERR_NOT_ENOUGH_ARGUMENTS;
-    }
+    if (argc < 1) return ERR_NOT_ENOUGH_ARGUMENTS;
 
     // Default values
     const char* imgfs_filename = argv[0]; // The first argument is the imgFS filename (mandatory)
@@ -249,9 +245,8 @@ int do_create_cmd(int argc, char** argv)
 
             i += 2; // Skip the values of the -small_res option
 
-        } else {
-            return ERR_INVALID_ARGUMENT; // Undefined option
-        }
+        } else return ERR_INVALID_ARGUMENT; // Undefined option
+        
     }
 
     // Create the imgFS with the given parameters

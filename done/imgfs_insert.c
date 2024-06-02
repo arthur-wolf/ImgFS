@@ -26,6 +26,16 @@ int do_insert(const char* image_buffer, size_t image_size,
     }
 
     //-----------------------------------------------------------------
+    // Check if there is an image with the same ID
+    //-----------------------------------------------------------------
+    for (uint32_t i = 0; i < imgfs_file->header.max_files; ++i) {
+        if (imgfs_file->metadata[i].is_valid == NON_EMPTY &&
+            strncmp(imgfs_file->metadata[i].img_id, img_id, MAX_IMG_ID) == 0) {
+            return ERR_DUPLICATE_ID;
+        }
+    }
+
+    //-----------------------------------------------------------------
     //              Find a free position in the index
     //-----------------------------------------------------------------
     size_t index = imgfs_file->header.max_files;

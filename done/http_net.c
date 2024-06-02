@@ -83,132 +83,71 @@ int http_serve_file(int connection, const char* filename)
  */
 static void *handle_connection(void *arg)
 {
-    //sigset_t mask;
-    //sigemptyset(&mask);
-    //sigaddset(&mask, SIGINT);
-    //sigaddset(&mask, SIGTERM);
-    //pthread_sigmask(SIG_BLOCK, &mask, NULL);
-
     if (arg == NULL) return &our_ERR_INVALID_ARGUMENT;
-    int *socket_d = (int *)arg;
 
-    char *rcvbuf = (char *)calloc(1, MAX_HEADER_SIZE + 1);
-    if (rcvbuf == NULL)
-    {
-        close(*socket_d);
-        return &our_ERR_IO;
-    }
+    int *sock_ptr = (int *)arg;
+    int sock = *sock_ptr;
 
-    ssize_t total_read = 0;
-    ssize_t nb_read = 0;
-    size_t header_size = 0;
-    int found_end_delim = 0;
-    int extended = 0;
+    char *rcvbuf = calloc(1, MAX_HEADER_SIZE);
+    if (rcvbuf == NULL) return &our_ERR_OUT_OF_MEMORY;
+    memset(rcvbuf, 0, MAX_HEADER_SIZE);
 
-    // Read the header until we find the end delimiter
-    while (total_read < MAX_HEADER_SIZE)
-    {
-        nb_read = tcp_read(*socket_d, rcvbuf + total_read, MAX_HEADER_SIZE - (size_t)total_read);
-        if (nb_read < 0)
-        {
+    struct http_message message;
+    size_t total_read = 0;
+    int content_len = 0;
+    int extend_message = 0;
+    int buffer_size = MAX_HEADER_SIZE;
+
+    while (1) {
+        ssize_t bytes_read = tcp_read(sock, rcvbuf + total_read, (size_t)buffer_size - total_read);
+
+        // Connection closed
+        if (bytes_read == 0) break;
+
+        // Error
+        if (bytes_read < 0) {
             free(rcvbuf);
-            close(*socket_d);
             return &our_ERR_IO;
         }
 
-        total_read += nb_read;
-        char *end_delim_position = strstr(rcvbuf, HTTP_HDR_END_DELIM);
+        total_read += (size_t)bytes_read;
+        int parse_result = http_parse_message(rcvbuf, total_read, &message, &content_len);
 
-        // If we found the end delimiter, we stop reading
-        if (end_delim_position != NULL)
-        {
-            header_size = (size_t)(end_delim_position - rcvbuf) + strlen(HTTP_HDR_END_DELIM);
-            found_end_delim = 1;
-            break;
-        }
-    }
-
-    if (!found_end_delim)
-    {
-        free(rcvbuf);
-        close(*socket_d);
-        return &our_ERR_IO;
-    }
-
-    struct http_message http_message_out;
-    int content_length;
-
-    // Parse the message contained in the buffer
-    while (1)
-    {
-        // Parse the message contained in the buffer
-        int parsing_error = http_parse_message(rcvbuf, (size_t)total_read, &http_message_out, &content_length);
-
-        if (parsing_error < 0)
-        {
+        // Error
+        if (parse_result < 0) {
             free(rcvbuf);
-            close(*socket_d);
-            return &our_ERR_IO;
+            return &parse_result;
         }
-        else if (parsing_error == 0)
-        {
 
-            // If we did not extend the message yet and we have a partial body
-            if (!extended && (content_length > 0 && total_read < content_length))
-            {
-                // Extend the message buffer until being able to store everything
-                // (header & content) into
-                size_t new_size = header_size + (size_t)content_length;
-                char *new_rcvbuf = (char *)realloc(rcvbuf, new_size);
-                if (new_rcvbuf == NULL)
-                {
+        // Incomplete message
+        if (parse_result == 0) {
+            // Extend the buffer if needed
+            if (!extend_message && content_len > 0 && total_read < (size_t)(content_len + MAX_HEADER_SIZE)) {
+                extend_message = 1;
+                buffer_size += content_len;
+                char *new_rcvbuf = realloc(rcvbuf, (size_t)(buffer_size + content_len));
+                if (new_rcvbuf == NULL) {
                     free(rcvbuf);
-                    close(*socket_d);
                     return &our_ERR_OUT_OF_MEMORY;
                 }
-
-                // We extend only once
                 rcvbuf = new_rcvbuf;
-                extended = 1;
-
-                // Continue reading from the socket until the entire message is read
-                while ((size_t)total_read < new_size)
-                {
-                    // Position the reading pointer to the right position
-                    nb_read = tcp_read(*socket_d, rcvbuf + total_read, new_size - (size_t)total_read);
-                    if (nb_read < 0)
-                    {
-                        free(rcvbuf);
-                        close(*socket_d);
-                        return &our_ERR_IO;
-                    }
-                    total_read += nb_read;
-                }
+            } else {
+                continue;
             }
         }
-        else if (parsing_error > 0)
-        {
 
-            // Call the event call back
-            if (cb(&http_message_out, *socket_d) != 0)
-            {
-                free(rcvbuf);
-                close(*socket_d);
-                return &our_ERR_IO;
-            }
-            // Reset variables for a new tcp reading round
+        // Full message received
+        if (parse_result > 0) {
+            cb(&message, sock);
+            memset(rcvbuf, 0, MAX_HEADER_SIZE);
             total_read = 0;
-            nb_read = 0;
-            found_end_delim = 0;
-            content_length = 0;
-            header_size = 0;
-            extended = 0;
-            break;
+            content_len = 0;
+            extend_message = 0;
+            buffer_size = MAX_HEADER_SIZE;
         }
     }
 
     free(rcvbuf);
-    close(*socket_d);
     return &our_ERR_NONE;
 }
 
@@ -230,10 +169,8 @@ int http_init(uint16_t port, EventCallback callback)
 void http_close(void)
 {
     if (passive_socket > 0) {
-        if (close(passive_socket) == -1)
-            perror("close() in http_close()");
-        else
-            passive_socket = -1;
+        if (close(passive_socket) == -1) perror("close() in http_close()");
+        else passive_socket = -1;
     }
 }
 
@@ -245,8 +182,7 @@ int http_receive(void)
     int new_socket = tcp_accept(passive_socket);
     if (new_socket < 0) return ERR_IO;
 
-
-    int *sock_ptr = malloc(sizeof(int));
+    int *sock_ptr = calloc(1, sizeof(int));
     if (sock_ptr == NULL) {
         close(new_socket);
         return ERR_OUT_OF_MEMORY;
@@ -283,43 +219,40 @@ size_t compute_body_length(size_t body_len)
  */
 int http_reply(int connection, const char* status, const char* headers, const char *body, size_t body_len)
 {
-    M_REQUIRE_NON_NULL(status);
     M_REQUIRE_NON_NULL(headers);
-    if(body == NULL && body_len != 0){
+    M_REQUIRE_NON_NULL(status);
+    if(body_len != 0 && body == NULL) {
         return ERR_INVALID_ARGUMENT;
     }
 
+    // Compute the length of the body length
     const char* content_len = "Content-Length: ";
     char body_len_str [20];
     sprintf(body_len_str, "%zu", body_len);
 
-    size_t header_size = strlen(HTTP_PROTOCOL_ID) + strlen(status)
-                         + strlen(HTTP_LINE_DELIM) + strlen(headers) + strlen(content_len)
-                         + strlen(body_len_str) + strlen(HTTP_HDR_END_DELIM);
-
-    if(header_size > MAX_HEADER_SIZE){
-        return ERR_INVALID_ARGUMENT;
-    }
+    // Compute the size of the header
+    size_t header_size = strlen(HTTP_PROTOCOL_ID) + strlen(status) + strlen(HTTP_LINE_DELIM) 
+                        + strlen(headers) + strlen(content_len)+ strlen(body_len_str) + strlen(HTTP_HDR_END_DELIM);
+    if(header_size > MAX_HEADER_SIZE) return ERR_INVALID_ARGUMENT;
+    
+    // Compute the size of the buffer
     size_t buffer_size = header_size + body_len + 1;
     char* buffer = calloc(buffer_size, 1);
-    if(buffer == NULL){
-        return ERR_OUT_OF_MEMORY;
-    }
+    if(buffer == NULL) return ERR_OUT_OF_MEMORY;
 
-    //------ Creating header -------------------
-    snprintf(buffer, MAX_HEADER_SIZE, "%s%s%s%s%s%s%s",
-            HTTP_PROTOCOL_ID, status, HTTP_LINE_DELIM,
-            headers, content_len, body_len_str, HTTP_HDR_END_DELIM);
+    // Creating header
+    snprintf(buffer, MAX_HEADER_SIZE, "%s%s%s%s%s%s%s", HTTP_PROTOCOL_ID, status, 
+            HTTP_LINE_DELIM, headers, content_len, body_len_str, HTTP_HDR_END_DELIM);
 
-    //------------ Body -----------------------
-    if(body_len > 0) {
-        memcpy(buffer + header_size, body, body_len);
-    }
+   // Adding body
+    if(body_len > 0) memcpy(buffer + header_size, body, body_len);
 
-    if(tcp_send(connection, buffer, buffer_size-1) < 0){
+    // Send the reply
+    if(tcp_send(connection, buffer, buffer_size-1) < 0) {
         free(buffer);
         return ERR_IO;
     }
+
     free(buffer);
     return ERR_NONE;
 }

@@ -157,7 +157,7 @@ static int handle_read_call(struct http_message* msg, int connection)
     // Get the resolution parameter
     char str_resolution[MAX_RESOLUTION];
     int get_resolution_error = http_get_var(&msg->uri, "res", str_resolution, MAX_RESOLUTION);
-    if (get_resolution_error == 0) return reply_error_msg(connection, ERR_INVALID_ARGUMENT);
+    if (get_resolution_error == 0) return reply_error_msg(connection, ERR_NOT_ENOUGH_ARGUMENTS);
     else if (get_resolution_error < 0) return reply_error_msg(connection, get_resolution_error);
     
     int resolution = resolution_atoi(str_resolution);
@@ -166,15 +166,14 @@ static int handle_read_call(struct http_message* msg, int connection)
     // Get the identificator parameter
     char img_id[MAX_IMG_ID];
     int get_id_error = http_get_var(&msg->uri, "img_id", img_id, MAX_IMG_ID);
-    if (get_id_error == 0) return reply_error_msg(connection, ERR_INVALID_ARGUMENT);
+    if (get_id_error == 0) return reply_error_msg(connection, ERR_NOT_ENOUGH_ARGUMENTS);
     else if (get_id_error < 0) return reply_error_msg(connection, get_id_error);
 
     // Display the image to read
     char *image_buffer = NULL;
     uint32_t image_size = 0;
-    //pthread_mutex_lock(&pthread_mutex);
+    
     int do_read_error = do_read(img_id, resolution, &image_buffer, &image_size, &fs_file);
-    //pthread_mutex_unlock(&pthread_mutex);
 
     if (do_read_error != 0) {
         free(image_buffer);
@@ -198,12 +197,10 @@ static int handle_delete_call(struct http_message *msg, int connection)
     // Get the identificator parameter
     char img_id[MAX_IMG_ID];
     int get_id_error = http_get_var(&msg->uri, "img_id", img_id, MAX_IMG_ID);
-    if (get_id_error == 0) return reply_error_msg(connection, ERR_INVALID_ARGUMENT);
+    if (get_id_error == 0) return reply_error_msg(connection, ERR_NOT_ENOUGH_ARGUMENTS);
     else if (get_id_error < 0) return reply_error_msg(connection, get_id_error);
 
-    //pthread_mutex_lock(&pthread_mutex);
     int do_delete_error = do_delete(img_id, &fs_file);
-    //pthread_mutex_unlock(&pthread_mutex);
 
     if (do_delete_error != 0) return reply_error_msg(connection, do_delete_error);
 
@@ -224,7 +221,7 @@ static int handle_insert_call(struct http_message *msg, int connection)
     // Get the image name parameter
     char img_name[MAX_IMGFS_NAME];
     int get_name_error = http_get_var(&msg->uri, "name", img_name, MAX_IMGFS_NAME);
-    if (get_name_error == 0) return reply_error_msg(connection, ERR_INVALID_ARGUMENT);
+    if (get_name_error == 0) return reply_error_msg(connection, ERR_NOT_ENOUGH_ARGUMENTS);
     else if (get_name_error < 0) return reply_error_msg(connection, get_name_error);
 
     // Allocate memory on the heap for the image content
@@ -233,9 +230,7 @@ static int handle_insert_call(struct http_message *msg, int connection)
     memcpy(img_content, msg->body.val, content_len);
 
     // Insert the image into the image file system
-    //pthread_mutex_lock(&pthread_mutex);
     int do_insert_error = do_insert(img_content, content_len, img_name, &fs_file);
-    //pthread_mutex_unlock(&pthread_mutex);
 
     free(img_content);
     if (do_insert_error != 0) return reply_error_msg(connection, do_insert_error);

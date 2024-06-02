@@ -22,6 +22,11 @@ int do_delete(const char* img_id, struct imgfs_file* imgfs_file)
     M_REQUIRE_NON_NULL(img_id);
     M_REQUIRE_NON_NULL(imgfs_file);
 
+    // Check if the database is empty to avoid unnecessary work
+    if (imgfs_file->header.nb_files == 0) {
+        return ERR_IMAGE_NOT_FOUND;
+    }
+
     // Find the image in the metadata
     size_t index = imgfs_file->header.max_files; // Invalid index, will be modified if the image is found
     for (uint32_t i = 0; i < imgfs_file->header.max_files; i++) {

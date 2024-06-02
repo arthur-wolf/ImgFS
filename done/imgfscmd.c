@@ -14,34 +14,33 @@
 #include <vips/vips.h>
 #include <string.h>
 
-const command_mapping commands[] = {
+#define N_COMMANDS 7
+
+const command_mapping commands[N_COMMANDS] = {
     {"list", do_list_cmd},
     {"create", do_create_cmd},
     {"help", help},
     {"delete", do_delete_cmd},
+    {"create", do_create_cmd},
     {"read", do_read_cmd},
     {"insert", do_insert_cmd}
 };
-
-const int commands_size = sizeof(commands) / sizeof(commands[0]);
 
 /*******************************************************************************
  * MAIN
  */
 int main(int argc, char* argv[])
 {
-    if (VIPS_INIT(argv[0]) != 0) {
-        vips_error_exit("unable to start VIPS");
-    }
-
     int ret = ERR_INVALID_COMMAND;
 
     if (argc < 2) { // We need at least 2 arguments : the program's name and the command's name
         ret = ERR_NOT_ENOUGH_ARGUMENTS;
     } else {
+        if (VIPS_INIT(argv[0]) != 0) vips_error_exit("unable to start VIPS");
+        
         argc--; argv++; // Skip the program's name
 
-        for (int i = 0; i < commands_size ; ++i) {
+        for (int i = 0; i < N_COMMANDS ; ++i) {
             if (strcmp(argv[0], commands[i].name) == 0) {
                 // Execute the function corresponding to the command
 

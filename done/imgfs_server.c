@@ -14,7 +14,8 @@
 #include <string.h>
 #include <signal.h>
 #include <unistd.h>
-#include <stdlib.h> // abort()
+#include <stdlib.h> 
+#include <vips/vips.h>
 
 static void signal_handler(int sig_num _unused)
 {
@@ -43,6 +44,12 @@ static void set_signal_handler(void)
 
 int main (int argc, char *argv[])
 {
+    if (argc < 2) return ERR_NOT_ENOUGH_ARGUMENTS;
+
+    if (VIPS_INIT(argv[0]) != 0) {
+        vips_error_exit("unable to start VIPS");
+    }
+
     int err = server_startup(argc, argv);
     if (err < 0) {
         perror("server_startup() failed");
@@ -56,5 +63,6 @@ int main (int argc, char *argv[])
     fprintf(stderr, "http_receive() failed\n");
     fprintf(stderr, "%s\n", ERR_MSG(err));
 
+    vips_shutdown();
     return 0;
 }

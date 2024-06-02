@@ -124,9 +124,7 @@ void do_close(struct imgfs_file* imgfs_file)
             imgfs_file->metadata = NULL;
         }
         if (imgfs_file->file != NULL) {
-            if (fclose(imgfs_file->file) == EOF) {
-                perror("Failed to close file");
-            }
+            fclose(imgfs_file->file);
             imgfs_file->file = NULL;
         }
     }

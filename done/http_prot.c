@@ -18,9 +18,7 @@ int http_match_uri(const struct http_message *message, const char *target_uri)
 
     // Check if the URI is long enough to contain the target URI
     size_t target_len = strlen(target_uri);
-    if (message->uri.len < target_len) {
-        return 0;
-    }
+    if (message->uri.len < target_len) return 0;
 
     // Check if the URI starts with the target URI
     if (strncmp(message->uri.val, target_uri, target_len) != 0) {
@@ -38,9 +36,7 @@ int http_match_verb(const struct http_string* method, const char* verb)
     M_REQUIRE_NON_NULL(method);
     M_REQUIRE_NON_NULL(verb);
 
-    if (method->len != strlen(verb)) {
-        return 0;
-    }
+    if (method->len != strlen(verb)) return 0;
 
     // Check if the method value matches the verb up to method->len chars
     if (strncmp(method->val, verb, method->len) != 0) {
@@ -68,9 +64,7 @@ int http_get_var(const struct http_string* url, const char* name, char* out, siz
 
     // Find the start of the parameters in the URL
     const char* query_start = strchr(url->val, '?');
-    if (query_start == NULL) {
-        return 0;  // No parameters found in the URL
-    }
+    if (query_start == NULL) return 0;  // No parameters found in the URL
     query_start++; // Move past the '?'
 
     // Find the parameter in the URL
@@ -82,24 +76,17 @@ int http_get_var(const struct http_string* url, const char* name, char* out, siz
         }
         param_start = strstr(param_start + 1, param_name);
     }
-
-    if (param_start == NULL) {
-        return 0;  // Parameter not found
-    }
-
+    if (param_start == NULL) return 0;  // Parameter not found
+    
     param_start += strlen(param_name); // Move past the parameter name and '='
 
     // Find the end of the parameter value
     const char* param_end = strchr(param_start, '&');
-    if (param_end == NULL) {
-        param_end = url->val + url->len;  // End of the URL
-    }
-
+    if (param_end == NULL) param_end = url->val + url->len;  // End of the URL
+    
     // Calculate the length of the parameter value
     size_t value_len = (size_t)(param_end - param_start);
-    if (value_len >= out_len) {
-        return ERR_RUNTIME;  // Value is too long for the output buffer
-    }
+    if (value_len >= out_len) return ERR_RUNTIME;  // Value is too long for the output buffer
 
     // Copy the value into the output buffer and null-terminate it
     strncpy(out, param_start, value_len);
@@ -130,9 +117,7 @@ int http_parse_message(const char *stream, size_t bytes_received, struct http_me
 
     // Ensure we have received the complete headers
     const char *headers_end = strstr(stream, HTTP_HDR_END_DELIM);
-    if (headers_end == NULL) {
-        return 0; // Incomplete headers
-    }
+    if (headers_end == NULL) return 0; // Incomplete headers
 
     // Initialize the output structure
     memset(out, 0, sizeof(struct http_message));
@@ -188,7 +173,7 @@ int http_parse_message(const char *stream, size_t bytes_received, struct http_me
  *
  * Returns the position of the first character after the line.
  */
-static_unless_test const char* get_next_token(const char* message, const char* delimiter, struct http_string* output)
+const char* get_next_token(const char* message, const char* delimiter, struct http_string* output)
 {
     if (message == NULL || delimiter == NULL) {
         return NULL;  // Invalid input
@@ -216,7 +201,7 @@ static_unless_test const char* get_next_token(const char* message, const char* d
  *
  * Returns the position right after the last header line.s
  */
-static_unless_test const char* http_parse_headers(const char* header_start, struct http_message* output)
+const char* http_parse_headers(const char* header_start, struct http_message* output)
 {
     if (header_start == NULL || output == NULL) {
         return NULL;  // Invalid input
