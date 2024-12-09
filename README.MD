@@ -1,4 +1,4 @@
-![Logo](https://upload.wikimedia.org/wikipedia/commons/f/f4/Logo_EPFL.svg)
+![Logo](https://upload.wikimedia.org/wikipedia/commons/9/95/Logo_EPFL_2019.svg)
 
 # CS202 Computer Systems Project : ImgFS
 
